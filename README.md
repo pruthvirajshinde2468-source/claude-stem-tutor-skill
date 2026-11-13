@@ -9,9 +9,13 @@
 - ✅ A **phone-friendly HTML study file** with KaTeX math and dark mode. Open it offline, on any device.
 - ✅ **Worked examples** with real numbers and **self-check problems**.
 
-**▶ [Live example: Reaction wheel — how a spacecraft turns without fuel](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/)**
+**▶ [Live examples](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/)**
 
-[![Example output: reaction wheel lesson](docs/img/preview.png)](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/)
+- 🫀 [The human heart — 3D teardown](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/heart.html) (medical mode, deep)
+- 🛰️ [Spacecraft attitude — Euler angles, DCM and quaternions](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/spacecraft-attitude.html) (aerospace/GNC)
+- ⚙️ [Reaction wheel — how a spacecraft turns without fuel](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/reaction-wheel.html)
+
+[![Example output: a stem-tutor lesson](docs/img/preview.png)](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/)
 
 ---
 

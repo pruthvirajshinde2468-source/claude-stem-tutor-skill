@@ -1,131 +1,17 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Reaction wheel — how a spacecraft turns without fuel</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
- onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+<title>STEM Tutor — live examples</title>
 <style>
 :root{--bg:#fff;--fg:#1d1d1f;--mut:#666;--acc:#d9480f;--card:#f5f5f7;--line:#ddd}
 @media(prefers-color-scheme:dark){:root{--bg:#141414;--fg:#eee;--mut:#aaa;--acc:#ff8a4c;--card:#1f1f1f;--line:#333}}
 body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,sans-serif}
 main{max-width:760px;margin:auto;padding:16px}
-h1{font-size:1.6em}h2{border-bottom:1px solid var(--line);padding-bottom:4px;margin-top:2em}
-table{border-collapse:collapse;width:100%;margin:8px 0;display:block;overflow-x:auto}
-td,th{border:1px solid var(--line);padding:6px;text-align:left;vertical-align:top}
-.box{background:var(--card);border-radius:8px;padding:12px;margin:12px 0}
-.warn{border-left:4px solid var(--acc)}
-svg,canvas{max-width:100%;height:auto;display:block;margin:auto}
-svg text{fill:var(--fg)}
-.ctl{display:flex;gap:8px;align-items:center;margin:6px 0}.ctl input{flex:1}
-button{background:var(--acc);color:#fff;border:0;border-radius:6px;padding:6px 12px;font-size:1em}
-.katex-display{overflow-x:auto;overflow-y:hidden}
-</style>
-<script>
-// player(id, draw, {dur}) — draw(ctx, t, w, h, css) with t in 0..1; css.getPropertyValue('--acc') etc.
-function player(id,draw,o={}){const c=document.getElementById(id),x=c.getContext('2d'),d=o.dur||4;
-const w=document.createElement('div');w.className='ctl';
-w.innerHTML='<button>Pause</button><input type="range" min="0" max="1" step="0.001" value="0">';
-c.after(w);const b=w.children[0],s=w.children[1];let run=true,t=0,last=null;
-b.onclick=()=>{run=!run;b.textContent=run?'Pause':'Play'};
-s.oninput=()=>{t=+s.value;run=false;b.textContent='Play'};
-function f(ts){if(last!==null&&run){t=(t+(ts-last)/1000/d)%1;s.value=t}last=ts;
-x.clearRect(0,0,c.width,c.height);draw(x,t,c.width,c.height,getComputedStyle(document.documentElement));
-requestAnimationFrame(f)}requestAnimationFrame(f)}
-</script></head><body><main>
-<h1>Reaction wheel — how a spacecraft turns without fuel</h1>
-<p class="box">Example output of the <b>stem-tutor</b> Claude skill, level <i>normal</i>. All text is written in ASD-STE100 Simplified Technical English. Values are example values for learning.</p>
-
-<h2>1. What it is</h2>
-<p>A reaction wheel is a heavy wheel inside a spacecraft. An electric motor turns the wheel. When the motor makes the wheel turn faster in one direction, the spacecraft turns in the opposite direction. The spacecraft uses this to point its camera or antenna without fuel.</p>
-<div class="box"><b>Everyday model for this topic:</b> you sit on an office chair that turns freely. You hold a bicycle wheel and turn it with your hand. Your chair turns in the opposite direction.</div>
-
-<h2>2. Diagram</h2>
-<svg viewBox="0 0 520 260" role="img" aria-label="Reaction wheel in spacecraft">
- <defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="var(--acc)"/></marker>
- <marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="currentColor"/></marker></defs>
- <rect x="150" y="40" width="180" height="180" rx="10" fill="none" stroke="currentColor" stroke-width="2"/>
- <circle cx="240" cy="130" r="55" fill="none" stroke="var(--acc)" stroke-width="6"/>
- <line x1="240" y1="130" x2="240" y2="78" stroke="var(--acc)" stroke-width="3"/>
- <circle cx="240" cy="130" r="5" fill="var(--acc)"/>
- <path d="M290,95 A62,62 0 0 1 300,150" fill="none" stroke="var(--acc)" stroke-width="2.5" marker-end="url(#ar)"/>
- <path d="M140,200 A120,120 0 0 1 140,60" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#ag)"/>
- <text x="345" y="110" font-size="14">wheel: speed ω,</text><text x="345" y="128" font-size="14">inertia I<tspan font-size="10" dy="3">w</tspan></text>
- <text x="10" y="125" font-size="14">body: speed Ω,</text><text x="10" y="143" font-size="14">inertia I<tspan font-size="10" dy="3">b</tspan></text>
- <text x="170" y="250" font-size="13">The two turn in opposite directions.</text>
-</svg>
-
-<h2>3. Equations</h2>
-<p><b>Angular momentum of the wheel:</b></p>
-$$H_w = I_w\,\omega$$
-<table><tr><th>Symbol</th><th>Physical object or motion</th><th>Physical / bookkeeping</th></tr>
-<tr><td>$H_w$</td><td>The "amount of turning" stored in the wheel. A heavy, fast wheel is hard to stop.</td><td>Physical</td></tr>
-<tr><td>$I_w$</td><td>How much mass the wheel has, and how far the mass is from the axle. Mass at the rim gives a large value.</td><td>Physical</td></tr>
-<tr><td>$\omega$</td><td>How fast the wheel turns (rad/s).</td><td>Physical</td></tr></table>
-<p><b>Extremes:</b> $\omega = 0$ gives $H_w = 0$: the wheel stores no turning. Double $\omega$ and $H_w$ doubles.</p>
-
-<p><b>Conservation of angular momentum (no outside torque):</b></p>
-$$I_b\,\Omega + I_w\,\omega = 0 \quad\Rightarrow\quad \Omega = -\frac{I_w}{I_b}\,\omega$$
-<table><tr><th>Symbol</th><th>Physical object or motion</th><th>Physical / bookkeeping</th></tr>
-<tr><td>$I_b$</td><td>The inertia of the spacecraft body (much larger than the wheel).</td><td>Physical</td></tr>
-<tr><td>$\Omega$</td><td>How fast the spacecraft body turns.</td><td>Physical</td></tr>
-<tr><td>$= 0$</td><td>The total turning at the start. The spacecraft was at rest.</td><td>Bookkeeping — do not look for an object. Look at the result: the two parts cancel.</td></tr>
-<tr><td>minus sign</td><td>The body turns opposite to the wheel.</td><td>Physical (direction)</td></tr></table>
-<p><b>Extremes:</b> if $I_b$ is very large, $\Omega$ is almost 0: a heavy spacecraft turns slowly. If the wheel stops ($\omega = 0$), the body also stops ($\Omega = 0$).</p>
-
-<p><b>Motor torque:</b></p>
-$$\tau = I_w\,\frac{d\omega}{dt}$$
-<table><tr><th>Symbol</th><th>Physical object or motion</th><th>Physical / bookkeeping</th></tr>
-<tr><td>$\tau$</td><td>The twist that the motor puts on the wheel. The same twist, in the opposite direction, goes into the body.</td><td>Physical</td></tr>
-<tr><td>$d\omega/dt$</td><td>How fast the wheel speed changes.</td><td>Physical</td></tr></table>
-<p><b>Hidden physics:</b> a wheel at a constant speed gives no torque. Only a <i>change</i> in wheel speed turns the spacecraft faster or slower.</p>
-<div class="box"><b>Hand test:</b> sit on an office chair. Lift your feet. Turn your upper body fast to the left. Your legs and the chair turn to the right.</div>
-
-<h2>4. Procedure</h2>
-<ol><li>Find the inertia of the wheel $I_w$ and of the body $I_b$.</li>
-<li>Find the change in wheel speed $\Delta\omega$ in rad/s.</li>
-<li>Calculate the body speed: $\Omega = -(I_w/I_b)\,\Delta\omega$.</li>
-<li>Divide $\Delta\omega$ by the time to get the motor torque.</li>
-<li>Check the sign. The body must turn opposite to the wheel.</li></ol>
-
-<h2>5. Worked example</h2>
-<p>Data: $I_w = 0.01\ \text{kg·m}^2$, $I_b = 50\ \text{kg·m}^2$. The wheel goes from 0 to 3000 rpm in 10 s.</p>
-<ol><li>Change the units: $3000\ \text{rpm} \times 2\pi / 60 = 314.2\ \text{rad/s}$.</li>
-<li>Wheel momentum: $H_w = 0.01 \times 314.2 = 3.14\ \text{N·m·s}$.</li>
-<li>Body speed: $\Omega = -3.14 / 50 = -0.0628\ \text{rad/s} = -3.6\ °/\text{s}$.</li>
-<li>Motor torque: $\tau = 0.01 \times 314.2 / 10 = 0.314\ \text{N·m}$.</li></ol>
-<p>Result: the spacecraft turns at 3.6 °/s, opposite to the wheel.</p>
-
-<h2>6. Animation</h2>
-<p>The wheel speeds up, then slows down. The body turns 90° and then stops when the wheel stops. (The inertia ratio is made larger here so that you can see the body move.)</p>
-<canvas id="a1" width="600" height="320"></canvas>
-<script>
-player('a1',(c,t,w,h,s)=>{const acc=s.getPropertyValue('--acc'),fg=s.getPropertyValue('--fg');
-const k=1/24, wmax=6*Math.PI*Math.PI;            // wheel turns 6 revs per cycle
-const om=wmax*Math.sin(Math.PI*t)/1, thw=wmax*(1-Math.cos(Math.PI*t))/Math.PI;
-const thb=-k*thw, Om=-k*om;
-c.save();c.translate(w/2-60,h/2);c.rotate(thb);
-c.strokeStyle=fg;c.lineWidth=3;c.strokeRect(-90,-90,180,180);
-c.fillStyle=fg;c.fillRect(-100,-12,10,24);         // antenna mark
-c.rotate(thw);c.strokeStyle=acc;c.lineWidth=7;c.beginPath();c.arc(0,0,55,0,7);c.stroke();
-c.lineWidth=3;c.beginPath();c.moveTo(0,0);c.lineTo(0,-52);c.stroke();c.restore();
-c.fillStyle=fg;c.font='15px system-ui';
-c.fillText('wheel ω  = '+om.toFixed(1)+' rad/s',w-210,90);
-c.fillText('body Ω   = '+Om.toFixed(2)+' rad/s',w-210,120);
-c.fillText('body angle = '+(thb*180/Math.PI).toFixed(0)+'°',w-210,150);
-c.fillStyle=acc;c.fillText('Ω = −(I_w / I_b)·ω',w-210,190);
-},{dur:6});
-</script>
-
-<h2>7. Common errors</h2>
-<ul><li>Do not think that a fast wheel turns the spacecraft. Only a <b>change</b> in wheel speed changes the body speed.</li>
-<li>Change rpm to rad/s before you calculate.</li>
-<li>Do not forget the minus sign. The body turns opposite to the wheel.</li>
-<li>A wheel has a maximum speed (saturation). Then it cannot give more torque in that direction. Thrusters or magnetorquers must remove the momentum.</li></ul>
-
-<h2>8. Self-check</h2>
-<div class="box warn">The same spacecraft must turn 90° in 60 s, at a constant body speed. Calculate the necessary wheel speed in rpm. Is this speed possible for a wheel with a maximum of 6000 rpm?</div>
-<p style="color:var(--mut);font-size:.9em">Made with the <a href="https://github.com/pruthvirajshinde2468-source/claude-stem-tutor-skill">stem-tutor</a> Claude skill.</p>
-
+a.card{display:block;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:12px 0;color:inherit;text-decoration:none}
+a.card:hover{border-color:var(--acc)}a.card b{color:var(--acc);font-size:1.1em}
+</style></head><body><main>
+<h1>STEM Tutor — live examples</h1>
+<p>Example lessons made with the <a href="https://github.com/pruthvirajshinde2468-source/claude-stem-tutor-skill">stem-tutor</a> Claude skill. Each one is one HTML file that also works offline.</p>
+<a class="card" href="heart.html"><b>The human heart — 3D teardown</b><br>Medical mode, deep level. Interactive 3D heart with the cardiac cycle, valves, Wiggers diagram, pressure–volume loop and clinical conditions.</a>
+<a class="card" href="spacecraft-attitude.html"><b>Spacecraft attitude — Euler angles, DCM and quaternions</b><br>Aerospace / GNC, normal level. How an ADCS describes where a spacecraft points, and why flight software uses quaternions.</a>
+<a class="card" href="reaction-wheel.html"><b>Reaction wheel — how a spacecraft turns without fuel</b><br>Aerospace, normal level. Conservation of angular momentum, with a worked example and animation.</a>
 </main></body></html>
-

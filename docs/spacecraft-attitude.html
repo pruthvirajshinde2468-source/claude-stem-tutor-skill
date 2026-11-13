@@ -1,0 +1,155 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spacecraft attitude — Euler angles, DCM and quaternions</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+ onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+<style>
+:root{--bg:#fff;--fg:#1d1d1f;--mut:#666;--acc:#d9480f;--b2:#1c7ed6;--b3:#2f9e44;--card:#f5f5f7;--line:#ddd}
+@media(prefers-color-scheme:dark){:root{--bg:#141414;--fg:#eee;--mut:#aaa;--acc:#ff8a4c;--b2:#4dabf7;--b3:#69db7c;--card:#1f1f1f;--line:#333}}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,sans-serif}
+main{max-width:760px;margin:auto;padding:16px}
+h1{font-size:1.6em}h2{border-bottom:1px solid var(--line);padding-bottom:4px;margin-top:2em}
+table{border-collapse:collapse;width:100%;margin:8px 0;display:block;overflow-x:auto}
+td,th{border:1px solid var(--line);padding:6px;text-align:left;vertical-align:top}
+.box{background:var(--card);border-radius:8px;padding:12px;margin:12px 0}
+.warn{border-left:4px solid var(--acc)}
+svg,canvas{max-width:100%;height:auto;display:block;margin:auto}
+svg text{fill:var(--fg)}
+.ctl{display:flex;gap:8px;align-items:center;margin:6px 0}.ctl input{flex:1}
+button{background:var(--acc);color:#fff;border:0;border-radius:6px;padding:6px 12px;font-size:1em}
+.katex-display{overflow-x:auto;overflow-y:hidden}
+pre{background:var(--card);border-radius:8px;padding:12px;overflow-x:auto;font-size:.9em}
+</style>
+<script>
+// player(id, draw, {dur}) — draw(ctx, t, w, h, css) with t in 0..1
+function player(id,draw,o={}){const c=document.getElementById(id),x=c.getContext('2d'),d=o.dur||4;
+const w=document.createElement('div');w.className='ctl';
+w.innerHTML='<button>Pause</button><input type="range" min="0" max="1" step="0.001" value="0">';
+c.after(w);const b=w.children[0],s=w.children[1];let run=true,t=0,last=null;
+b.onclick=()=>{run=!run;b.textContent=run?'Pause':'Play'};
+s.oninput=()=>{t=+s.value;run=false;b.textContent='Play'};
+function f(ts){if(last!==null&&run){t=(t+(ts-last)/1000/d)%1;s.value=t}last=ts;
+x.clearRect(0,0,c.width,c.height);draw(x,t,c.width,c.height,getComputedStyle(document.documentElement));
+requestAnimationFrame(f)}requestAnimationFrame(f)}
+</script></head><body><main>
+<h1>Spacecraft attitude — Euler angles, DCM and quaternions</h1>
+<p class="box">Example output of the <b>stem-tutor</b> Claude skill, level <i>normal</i>. All text is written in ASD-STE100 Simplified Technical English. Values are example values for learning.</p>
+
+<h2>1. What it is</h2>
+<p>The <b>attitude</b> of a spacecraft is the direction in which it points. The attitude control system (ADCS) must know this direction to point the camera at the Earth, the solar panels at the Sun, and the antenna at the ground station.</p>
+<p>There are three common ways to write one attitude as numbers:</p>
+<ul><li><b>Euler angles</b> — three turns: yaw, pitch, roll. Easy for people to read.</li>
+<li><b>DCM</b> (direction cosine matrix) — a 3×3 table. It changes a vector from one frame to the other frame.</li>
+<li><b>Quaternion</b> — four numbers: one axis and one angle. Flight software uses this.</li></ul>
+<div class="box"><b>Everyday model for this topic:</b> hold a phone in your hand. Turn it left (yaw), tip the top away from you (pitch), then tilt it to one side (roll). Now try one single turn about one tilted axis that gives the same end position. That single turn is the quaternion.</div>
+
+<h2>2. Diagram</h2>
+<svg viewBox="0 0 520 260" role="img" aria-label="Body axes of a spacecraft with yaw, pitch and roll">
+ <defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="currentColor"/></marker></defs>
+ <polygon points="200,110 290,80 350,110 260,140" fill="none" stroke="currentColor" stroke-width="2"/>
+ <polygon points="200,110 200,170 260,200 260,140" fill="none" stroke="currentColor" stroke-width="2"/>
+ <polygon points="260,140 260,200 350,170 350,110" fill="none" stroke="currentColor" stroke-width="2"/>
+ <line x1="275" y1="140" x2="420" y2="190" stroke="var(--acc)" stroke-width="3" marker-end="url(#ar)" color="var(--acc)"/>
+ <line x1="275" y1="140" x2="140" y2="190" stroke="var(--b2)" stroke-width="3" marker-end="url(#ar)" color="var(--b2)"/>
+ <line x1="275" y1="140" x2="275" y2="20" stroke="var(--b3)" stroke-width="3" marker-end="url(#ar)" color="var(--b3)"/>
+ <text x="410" y="215" font-size="14">x — roll φ</text>
+ <text x="70" y="215" font-size="14">y — pitch θ</text>
+ <text x="285" y="25" font-size="14">z — yaw ψ</text>
+ <text x="10" y="40" font-size="13">Turn order (3-2-1):</text>
+ <text x="10" y="58" font-size="13">1. yaw about z</text>
+ <text x="10" y="76" font-size="13">2. pitch about new y</text>
+ <text x="10" y="94" font-size="13">3. roll about new x</text>
+</svg>
+
+<h2>3. Equations</h2>
+<p><b>Direction cosine matrix from Euler angles (yaw-pitch-roll, 3-2-1):</b></p>
+$$R = R_z(\psi)\,R_y(\theta)\,R_x(\phi),\qquad R_z(\psi)=\begin{bmatrix}\cos\psi&-\sin\psi&0\\ \sin\psi&\cos\psi&0\\0&0&1\end{bmatrix}$$
+<table><tr><th>Symbol</th><th>Physical object or motion</th><th>Physical / bookkeeping</th></tr>
+<tr><td>$\psi,\theta,\phi$</td><td>Yaw, pitch and roll angles: how far the body turns about each axis.</td><td>Physical</td></tr>
+<tr><td>$R$</td><td>Each column is one body axis, written in the reference frame. Column 1 is where the nose (x axis) points.</td><td>Physical</td></tr>
+<tr><td>order $z\,y\,x$</td><td>The sequence of the three turns.</td><td>Bookkeeping — a different order gives a different attitude. Always write the order down.</td></tr></table>
+<p><b>Extremes:</b> all angles 0 gives $R = I$: the body axes are on the reference axes. A matrix that is not orthonormal ($R^TR \ne I$) is not a rotation: the body is stretched, which is not possible for a solid spacecraft.</p>
+
+<p><b>Back from the DCM to Euler angles:</b></p>
+$$\theta = -\arcsin R_{31},\qquad \phi = \operatorname{atan2}(R_{32},R_{33}),\qquad \psi = \operatorname{atan2}(R_{21},R_{11})$$
+<p><b>Hidden physics — gimbal lock:</b> at $\theta = \pm 90°$, $R_{32}$, $R_{33}$, $R_{21}$ and $R_{11}$ all become 0. Then atan2 cannot find yaw and roll separately. The yaw axis and the roll axis are on the same line, and you lose one degree of freedom in the numbers. The spacecraft itself has no problem. Only the description fails.</p>
+
+<p><b>Quaternion from one axis and one angle:</b></p>
+$$q = \begin{bmatrix} q_0 \\ \mathbf{q}_v\end{bmatrix} = \begin{bmatrix}\cos(\alpha/2)\\ \sin(\alpha/2)\,\hat{\mathbf{e}}\end{bmatrix},\qquad \lVert q\rVert = 1$$
+<table><tr><th>Symbol</th><th>Physical object or motion</th><th>Physical / bookkeeping</th></tr>
+<tr><td>$\hat{\mathbf{e}}$</td><td>The single axis of the turn (a unit vector). Point your thumb along it: your fingers show the turn direction.</td><td>Physical</td></tr>
+<tr><td>$\alpha$</td><td>The angle of the single turn.</td><td>Physical</td></tr>
+<tr><td>$\alpha/2$</td><td>Half the angle.</td><td>Bookkeeping — the half angle makes the algebra work when you multiply quaternions. Do not look for a "half turn" on the spacecraft.</td></tr>
+<tr><td>$\lVert q\rVert = 1$</td><td>Four numbers, but only three are free.</td><td>Bookkeeping — normalize $q$ after each integration step.</td></tr></table>
+<p><b>Extremes:</b> $\alpha = 0$ gives $q = [1,0,0,0]$: no turn. $\alpha = 360°$ gives $q = [-1,0,0,0]$: the same attitude. So $q$ and $-q$ are the same attitude. A quaternion has no gimbal lock at any angle.</p>
+<div class="box"><b>Hand test:</b> hold a book flat. Pitch it up 90° (nose up). Now "yaw" and "roll" turn the book about the same line. This is gimbal lock.</div>
+
+<h2>4. Procedure</h2>
+<ol><li>Write the three Euler angles and the turn order (here 3-2-1).</li>
+<li>Make $R = R_z R_y R_x$. Check that $R^TR = I$ and $\det R = +1$.</li>
+<li>To turn a vector from body frame to reference frame: $\mathbf{v}_{ref} = R\,\mathbf{v}_{body}$.</li>
+<li>For flight software, change to a quaternion. Normalize it.</li>
+<li>Change back to Euler angles only to show numbers to people. Check $\theta$ first: near ±90°, the yaw and roll values are not reliable.</li></ol>
+
+<h2>5. Worked example</h2>
+<p>Data: the spacecraft turns 90° about the z axis. Where does the nose (body x axis) point?</p>
+<ol><li>Quaternion: $\hat{\mathbf{e}} = [0,0,1]$, $\alpha = 90°$, so $q = [\cos 45°,\ 0,\ 0,\ \sin 45°] = [0.7071,\ 0,\ 0,\ 0.7071]$.</li>
+<li>Norm: $0.7071^2 + 0.7071^2 = 1.000$. Correct.</li>
+<li>Same turn as a DCM: $R = R_z(90°) = \begin{bmatrix}0&-1&0\\1&0&0\\0&0&1\end{bmatrix}$.</li>
+<li>Nose: $R\,[1,0,0]^T = [0,1,0]^T$.</li></ol>
+<p>Result: the nose now points along the reference y axis.</p>
+<pre>import numpy as np
+def q_from_axis_angle(axis, angle_deg):
+    axis = np.asarray(axis, float) / np.linalg.norm(axis)
+    half = np.radians(angle_deg) / 2
+    return np.concatenate(([np.cos(half)], np.sin(half) * axis))
+print(q_from_axis_angle([0, 0, 1], 90))   # [0.7071 0. 0. 0.7071]</pre>
+
+<h2>6. Animation</h2>
+<p>The spacecraft turns one full turn about one tilted axis (dashed line). The quaternion changes smoothly. Look at the Euler angles: they jump when pitch goes near ±90°.</p>
+<canvas id="a1" width="600" height="340"></canvas>
+<script>
+(()=>{const ax=[1,2,3],n=Math.hypot(...ax),e=ax.map(v=>v/n);
+function R(a){const c=Math.cos(a),s=Math.sin(a),C=1-c,[x,y,z]=e;   // Rodrigues
+return[[c+x*x*C,x*y*C-z*s,x*z*C+y*s],[y*x*C+z*s,c+y*y*C,y*z*C-x*s],[z*x*C-y*s,z*y*C+x*s,c+z*z*C]]}
+const mul=(M,v)=>M.map(r=>r[0]*v[0]+r[1]*v[1]+r[2]*v[2]);
+const P=(v,cx,cy,k)=>[cx+(v[0]-v[1])*0.866*k,cy+((v[0]+v[1])*0.5-v[2])*k];   // isometric view
+const V=[];for(const x of[-1,1])for(const y of[-.7,.7])for(const z of[-.5,.5])V.push([x,y,z]);
+const E=[[0,1],[2,3],[4,5],[6,7],[0,2],[1,3],[4,6],[5,7],[0,4],[1,5],[2,6],[3,7]];
+player('a1',(c,t,w,h,s)=>{const g=k=>s.getPropertyValue(k),fg=g('--fg'),mut=g('--mut');
+const a=2*Math.PI*t,M=R(a),cx=190,cy=175,k=70;
+c.setLineDash([5,5]);c.strokeStyle=mut;c.lineWidth=1.5;c.beginPath();
+let p=P(e.map(v=>-1.9*v),cx,cy,k);c.moveTo(...p);p=P(e.map(v=>1.9*v),cx,cy,k);c.lineTo(...p);c.stroke();c.setLineDash([]);
+const S=V.map(v=>P(mul(M,v),cx,cy,k));c.strokeStyle=fg;c.lineWidth=2;
+for(const[i,j]of E){c.beginPath();c.moveTo(...S[i]);c.lineTo(...S[j]);c.stroke()}
+[['--acc',[1.6,0,0],'x'],['--b2',[0,1.3,0],'y'],['--b3',[0,0,1.2],'z']].forEach(([col,v,l])=>{
+const q=P(mul(M,v),cx,cy,k);c.strokeStyle=c.fillStyle=g(col);c.lineWidth=3;c.beginPath();c.moveTo(cx,cy);c.lineTo(...q);c.stroke();
+c.font='bold 14px system-ui';c.fillText(l,q[0]+4,q[1]-4)});
+const q0=Math.cos(a/2),sh=Math.sin(a/2),D=x=>x*180/Math.PI;
+const th=-Math.asin(Math.max(-1,Math.min(1,M[2][0]))),ph=Math.atan2(M[2][1],M[2][2]),ps=Math.atan2(M[1][0],M[0][0]);
+c.fillStyle=fg;c.font='15px system-ui';const X=w-210;
+c.fillText('angle α = '+D(a).toFixed(0)+'°',X,50);
+c.fillText('q0 = '+q0.toFixed(3),X,85);
+['q1','q2','q3'].forEach((l,i)=>c.fillText(l+' = '+(sh*e[i]).toFixed(3),X,108+23*i));
+c.fillText('yaw ψ   = '+D(ps).toFixed(0)+'°',X,200);
+c.fillText('pitch θ = '+D(th).toFixed(0)+'°',X,223);
+c.fillText('roll φ  = '+D(ph).toFixed(0)+'°',X,246);
+c.fillStyle=g('--acc');c.fillText('axis ê = [1,2,3]/√14',X,285);
+},{dur:10});})();
+</script>
+
+<h2>7. Common errors</h2>
+<ul><li>Do not mix turn orders. $R_zR_yR_x$ and $R_xR_yR_z$ give different attitudes.</li>
+<li>Change degrees to radians before you use sin and cos.</li>
+<li>Some libraries write the quaternion as $[q_1,q_2,q_3,q_0]$ (scalar last). Check the order before you use it.</li>
+<li>Normalize the quaternion after each step. Small errors make $\lVert q\rVert \ne 1$, and then the attitude is wrong.</li>
+<li>Do not trust yaw and roll when pitch is near ±90°.</li></ul>
+
+<h2>8. Self-check</h2>
+<div class="box warn">1. Write the quaternion for a 180° turn about the x axis. Which body axis keeps its direction?<br>2. Use the DCM from the worked example. Where does the body y axis point after the turn?<br>3. Make $R$ with $\theta = 90°$ and two different pairs of yaw and roll. Show that two pairs give the same $R$.</div>
+<p><a href="./">← All examples</a></p>
+<p style="color:var(--mut);font-size:.9em">Made with the <a href="https://github.com/pruthvirajshinde2468-source/claude-stem-tutor-skill">stem-tutor</a> Claude skill.</p>
+
+</main></body></html>
