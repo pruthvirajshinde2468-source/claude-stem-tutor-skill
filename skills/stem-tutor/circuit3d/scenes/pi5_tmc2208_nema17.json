@@ -1,0 +1,35 @@
+{
+  "title": "Raspberry Pi 5 + TMC2208 + geared NEMA 17 — inside the circuit",
+  "sim": "stepper",
+  "photo": [
+    "Raspberry Pi 5 (4/8 GB)",
+    "BTT TMC2208 V3.0 stepper driver",
+    "Stepper motor 17HS15-1684S-PG27 (NEMA 17, 27:1 planetary gearbox)",
+    "12 V DC power supply",
+    "1.5 kΩ resistor (EN pull-up)",
+    "Jumper wires"
+  ],
+  "params": { "vm": 12, "vref": 1.0, "micro": 8, "rPull": 1500 },
+  "parts": [
+    { "id": "pi",  "type": "pi5",       "at": [115, 0, 10] },
+    { "id": "drv", "type": "tmc2208",   "at": [0, 0, 0] },
+    { "id": "mot", "type": "nema17_pg", "at": [-100, 0, 10] },
+    { "id": "psu", "type": "psu",       "at": [-60, 0, -95], "label": "12 V supply" },
+    { "id": "r1",  "type": "resistor",  "at": [55, 0, 55], "label": "1.5 kΩ pull-up", "bands": ["#7a4b1c", "#2e8b3a", "#d22", "#c9a227"] }
+  ],
+  "wires": [
+    { "a": "pi.1",     "b": "drv.VIO",  "color": "#d22",    "sig": "vio",    "loop": "logic" },
+    { "a": "drv.GND",  "b": "pi.6",     "color": "#222",    "sig": "glogic", "loop": "logic" },
+    { "a": "pi.11",    "b": "drv.STEP", "color": "#2a9d3a", "sig": "step",   "loop": "logic" },
+    { "a": "pi.13",    "b": "drv.DIR",  "color": "#8a3ffc", "sig": "dir",    "loop": "logic" },
+    { "a": "pi.1",     "b": "r1.2",     "color": "#d22",    "sig": "pull",   "loop": "logic" },
+    { "a": "r1.1",     "b": "drv.EN",   "color": "#e67700", "sig": "pull",   "loop": "logic" },
+    { "a": "drv.EN",   "b": "pi.15",    "color": "#e67700", "sig": "pull",   "loop": "logic", "level": "en" },
+    { "a": "psu.V+",   "b": "drv.VM",   "color": "#d22",    "sig": "vm",     "loop": "motor" },
+    { "a": "drv.GNDM", "b": "psu.V-",   "color": "#222",    "sig": "gmotor", "loop": "motor" },
+    { "a": "drv.OA1",  "b": "mot.A1",   "color": "#222",    "sig": "iA",     "loop": "motor" },
+    { "a": "mot.A2",   "b": "drv.OA2",  "color": "#2a9d3a", "sig": "iA",     "loop": "motor" },
+    { "a": "drv.OB1",  "b": "mot.B1",   "color": "#d22",    "sig": "iB",     "loop": "motor" },
+    { "a": "mot.B2",   "b": "drv.OB2",  "color": "#1c6dd0", "sig": "iB",     "loop": "motor" }
+  ]
+}

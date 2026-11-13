@@ -13,11 +13,23 @@
 
 - 🫀 [The human heart — 3D teardown](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/heart.html) (medical mode, deep)
 - 🛰️ [Spacecraft attitude — Euler angles, DCM and quaternions](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/spacecraft-attitude.html) (aerospace/GNC)
+- 🔌 [Raspberry Pi 5 + stepper driver + motor — 3D circuit lab](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/stepper-circuit.html) (photo → 3D mode)
 - ⚙️ [Reaction wheel — how a spacecraft turns without fuel](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/reaction-wheel.html)
 
 [![Example output: a stem-tutor lesson](docs/img/preview.png)](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/)
 
 ---
+
+## New: photo → 3D circuit lab
+
+Send Claude a photo of your electronics parts (for example a Raspberry Pi, a stepper driver, a motor and a power supply). The skill names each part, takes the wiring from the datasheets, and builds one interactive 3D page:
+
+- **See-through layers:** whole bench, logic loop, motor loop, inside the Pi, inside the driver (H-bridges, sequencer), inside the motor (coils, N/S pole faces, rotor, gearbox).
+- **Power switch and live current flow:** glowing particles show where current goes, in conventional or electron direction.
+- **Commands you can send:** EN, DIR, STEP pulses. Live values, MOSFET states and a timing chart follow one model.
+- **Fast and token-light:** the 3D engine ships with the skill. For each photo Claude writes only a ~40-line scene file.
+
+Parts in the library now: Raspberry Pi 5, TMC2208 (BTT V3.0), NEMA 17 with planetary gearbox, DC supply, resistor. Any other part is shown as a labelled closed box.
 
 ## Why this skill
 
