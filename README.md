@@ -46,8 +46,10 @@ It is also **fast and token-efficient**: it writes each diagram once, reuses one
 
 ## Install
 
+Current version: **v2.1.0**. See [CHANGELOG.md](CHANGELOG.md).
+
 ### Claude.ai (web, desktop and mobile app)
-1. Download **`stem-tutor.zip`** from the [Releases](../../releases) page (or zip the `skills/stem-tutor` folder yourself).
+1. Download **`stem-tutor-v2.1.0.zip`** from the [Releases](../../releases) page (or zip the `skills/stem-tutor` folder yourself).
 2. In Claude, open **Settings → Capabilities → Skills** and upload the zip.
 3. Start a chat and ask: *"Explain how a PID controller works."*
 
