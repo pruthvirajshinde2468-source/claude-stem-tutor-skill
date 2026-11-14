@@ -5,7 +5,8 @@ The version is in `SKILL.md` (`metadata.version` and the title), in the first li
 
 | Version | Date | What changed |
 |---|---|---|
-| **v2.1.1** | 2026-11-14 | README picture is now the 3D stepper circuit. Skill files are the same as v2.1.0. |
+| **v2.1.2** | 2026-11-14 | Security fix: text from a shared 3D-lab link is shown as plain text, so a bad link cannot run code. |
+| v2.1.1 | 2026-11-14 | README picture is now the 3D stepper circuit. Skill files are the same as v2.1.0. |
 | v2.1.0 | 2026-11-14 | Works with any AI: `portable/STEM-TUTOR-PROMPT.md` for ChatGPT, Gemini and others. Hosted 3D circuit lab with a paste box (`circuit-lab.html`). |
 | v2.0.0 | 2026-11-14 | Photo → 3D circuit lab mode (circuit3d engine, stepper simulation, Pi 5 + TMC2208 + NEMA 17 example). |
 | v1.1.0 | 2026-11-14 | Live examples: heart 3D, spacecraft attitude, examples index page. |

@@ -140,6 +140,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 const $ = id => document.getElementById(id);
+// Scene text can come from a shared link: escape it before innerHTML.
+const esc = v => String(v).replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';');
 addEventListener('hashchange', () => location.reload());
 // Scene source: inlined by build.py, else the URL hash (#<encoded JSON>), else a paste box.
 // The paste box lets any AI (ChatGPT, Gemini, ...) write only the scene JSON.
@@ -415,7 +417,7 @@ function syncUI() {
   document.querySelectorAll('[data-cut]').forEach(b => b.classList.toggle('on', (b.dataset.cut === '1') === VIEW.glass));
   [...$('layers').children].forEach(b => b.classList.toggle('on', b._v[0] === VIEW.part && b._v[1] === VIEW.loop));
 }
-$('photo').innerHTML = (SC.photo || []).map(t => '<li>' + t.replace(/</g, '&lt;') + '</li>').join('');
+$('photo').innerHTML = (SC.photo || []).map(t => '<li>' + esc(t) + '</li>').join('');
 
 // camera fly
 let fly = null;
@@ -440,12 +442,12 @@ cv.addEventListener('pointerup', e => {
 });
 function selPart(id) {
   const P = PARTS[id], used = WIRES.flatMap(w => [w.a, w.b]).filter(r => r.startsWith(id + '.')).map(r => r.slice(id.length + 1));
-  $('sel').innerHTML = '<h3>Selected part</h3><b>' + P.info.name + '</b><p class="note" style="color:#3b3732;font-size:12px">' + P.info.text + '</p>' +
-    (used.length ? '<ul>' + [...new Set(used)].map(n => '<li><code>' + (P.pinName ? P.pinName(isNaN(n) ? n : +n) : n) + '</code>' + (P.roles && P.roles[n] ? ' — ' + P.roles[n] : '') + '</li>').join('') + '</ul>' : '');
+  $('sel').innerHTML = '<h3>Selected part</h3><b>' + esc(P.info.name) + '</b><p class="note" style="color:#3b3732;font-size:12px">' + esc(P.info.text) + '</p>' +
+    (used.length ? '<ul>' + [...new Set(used)].map(n => '<li><code>' + esc(P.pinName ? P.pinName(isNaN(n) ? n : +n) : n) + '</code>' + (P.roles && P.roles[n] ? ' — ' + esc(P.roles[n]) : '') + '</li>').join('') + '</ul>' : '');
 }
 function selWire(w) {
   const what = { vio: 'logic supply for the driver (3.3 V)', glogic: 'logic return to the Pi GND', step: 'STEP command: one pulse = one microstep', dir: 'DIR command: HIGH or LOW sets the direction', pull: 'pull-up path for EN', vm: 'motor supply + (large current)', gmotor: 'motor return to supply −', iA: 'coil A current', iB: 'coil B current' }[w.sig] || '';
-  $('sel').innerHTML = '<h3>Selected wire</h3><b>' + w.a + ' → ' + w.b + '</b><p class="note" style="color:#3b3732;font-size:12px">' + what + '. Loop: ' + w.loop + '. Now: ' + fmtI(wireI(w)) + '.</p>';
+  $('sel').innerHTML = '<h3>Selected wire</h3><b>' + esc(w.a) + ' → ' + esc(w.b) + '</b><p class="note" style="color:#3b3732;font-size:12px">' + what + '. Loop: ' + esc(w.loop) + '. Now: ' + fmtI(wireI(w)) + '.</p>';
 }
 
 // ---------- wire physics view ----------

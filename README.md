@@ -1,6 +1,6 @@
 # STEM Tutor — a Claude Skill that explains engineering, physics and medicine so you can *see* the equations
 
-**A free [Claude Skill](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview) for students.** Ask Claude about any technical topic — control theory, Kalman filters, quaternions, thermodynamics, circuits, Python, the heart cycle — and get:
+**A free [Claude Skill](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview) for students.** Also works with ChatGPT, Gemini and other AIs ([how](#chatgpt-gemini-copilot-deepseek-and-other-chat-ais)). Ask Claude about any technical topic — control theory, Kalman filters, quaternions, thermodynamics, circuits, Python, the heart cycle — and get:
 
 - ✅ An explanation in **Simplified Technical English** (ASD-STE100): short, clear sentences. Great if English is your second language.
 - ✅ A **physical meaning for every equation**: which real object is each symbol, which terms are only "bookkeeping", and what happens at the extreme values.
@@ -14,6 +14,7 @@
 - 🫀 [The human heart — 3D teardown](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/heart.html) (medical mode, deep)
 - 🛰️ [Spacecraft attitude — Euler angles, DCM and quaternions](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/spacecraft-attitude.html) (aerospace/GNC)
 - 🔌 [Raspberry Pi 5 + stepper driver + motor — 3D circuit lab](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/stepper-circuit.html) (photo → 3D mode)
+- 🧩 [3D circuit lab — paste a scene from any AI](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/circuit-lab.html)
 - ⚙️ [Reaction wheel — how a spacecraft turns without fuel](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/reaction-wheel.html)
 
 [![3D circuit lab: Raspberry Pi 5 + TMC2208 driver + NEMA 17 stepper, power on, current flowing](docs/img/preview.jpg)](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/stepper-circuit.html)
@@ -46,11 +47,11 @@ It is also **fast and token-efficient**: it writes each diagram once, reuses one
 
 ## Install
 
-Current version: **v2.1.1**. See [CHANGELOG.md](CHANGELOG.md).
+Current version: **v2.1.2**. See [CHANGELOG.md](CHANGELOG.md).
 
 ### Claude.ai (web, desktop and mobile app)
-1. Download **`stem-tutor-v2.1.0.zip`** from the [Releases](../../releases) page (or zip the `skills/stem-tutor` folder yourself).
-2. In Claude, open **Settings → Capabilities → Skills** and upload the zip.
+1. Download **`stem-tutor-v2.1.2.zip`** from the [Releases](../../releases) page (or zip the `skills/stem-tutor` folder yourself).
+2. In Claude, open **Settings → Customize → Skills → Add → Upload skill** and pick the zip.
 3. Start a chat and ask: *"Explain how a PID controller works."*
 
 ### Claude Code
