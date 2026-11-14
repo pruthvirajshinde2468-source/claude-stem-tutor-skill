@@ -57,6 +57,18 @@ git clone https://github.com/pruthvirajshinde2468-source/claude-stem-tutor-skill
 cp -r claude-stem-tutor-skill/skills/stem-tutor ~/.claude/skills/
 ```
 
+### ChatGPT, Gemini, Copilot, DeepSeek and other chat AIs
+The whole skill is also one plain-text prompt: [`portable/STEM-TUTOR-PROMPT.md`](portable/STEM-TUTOR-PROMPT.md) (under 8,000 characters).
+- **ChatGPT:** make a Custom GPT (Explore GPTs → Create → Configure) or a Project, and paste the file into **Instructions**. Free plan: paste it as the first message of a chat.
+- **Gemini:** make a Gem and paste the file into **Instructions**.
+- **Any other AI:** paste the file as the first message.
+
+The AI gives you one HTML study file in a code block: save it as `lesson.html` and open it in a browser.
+For a photo of electronics parts, the AI writes a short scene JSON. Paste it into the **[3D circuit lab](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/circuit-lab.html)** and press **Build 3D**. The page link then holds the whole model, so you can share it.
+
+### Coding agents (OpenAI Codex, Gemini CLI, Cursor, GitHub Copilot)
+`skills/stem-tutor/SKILL.md` uses the open Agent Skills format. Copy the `skills/stem-tutor` folder into the agent's skills folder (for example `~/.codex/skills/` or `.agents/skills/`) or point the agent at `SKILL.md`.
+
 ## Use
 
 Ask about any topic. Add a depth word if you want:

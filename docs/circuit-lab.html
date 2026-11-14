@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>3D circuit lab</title>
+<style>
+:root{--bg:#f4f1ec;--panel:#fffdf9;--ink:#1d1d1f;--muted:#6b6660;--line:#e4ddd2;--accent:#f2a20c;--logic:#14a3d9;--motor:#ff8a00;--el:#5a7dff}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#app{display:grid;grid-template-columns:1fr 360px;grid-template-rows:auto 1fr auto;height:100vh;height:100dvh}
+header{grid-column:1/-1;display:flex;align-items:center;gap:6px;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+header h1{font-size:15px;margin:0 8px 0 0;font-weight:650}
+.sp{flex:1}
+select,button{font:inherit;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;padding:5px 9px;cursor:pointer;touch-action:manipulation}
+button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+button.pw.on{background:#2a9d3a;border-color:#2a9d3a}
+#stage{position:relative;overflow:hidden;min-height:0}
+#c{width:100%;height:100%;display:block;touch-action:none}
+#lab{position:absolute;inset:0;pointer-events:none}
+.lb{font-size:12px;font-weight:600;background:rgba(255,253,249,.92);border:1px solid var(--line);padding:1px 6px;border-radius:6px;white-space:nowrap;transform:translateY(-14px)}
+.pn{font:600 10px ui-monospace,Consolas,monospace;background:rgba(29,29,31,.82);color:#fff;padding:0 4px;border-radius:4px;white-space:nowrap;transform:translateY(-10px)}
+.pol{font:800 14px system-ui;padding:0 5px;border-radius:5px;color:#fff}
+.in{font-size:11px;background:rgba(255,248,230,.95);border:1px solid #e9c46a;padding:1px 6px;border-radius:6px;white-space:nowrap}
+#legend{position:absolute;right:10px;top:10px;font-size:11px;color:var(--muted);background:rgba(255,253,249,.92);padding:4px 8px;border-radius:6px;border:1px solid var(--line)}
+#legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin:0 3px 0 6px;vertical-align:-1px}
+#capbox{position:absolute;left:50%;transform:translateX(-50%);bottom:10px;width:min(680px,calc(100% - 20px));background:rgba(255,253,249,.96);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:8px 12px}
+#phase{font-weight:700;font-size:13px}#cap{font-size:13px;color:#3b3732}
+#controls{display:flex;gap:8px;align-items:center;padding:8px 12px;border-top:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+.grp{display:flex;gap:4px;flex-wrap:wrap}
+#side{grid-row:2/4;grid-column:2;overflow:auto;border-left:1px solid var(--line);background:var(--panel);padding:10px 12px}
+.card{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:10px;background:#fff}
+.card h3{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.nums div{background:var(--bg);border-radius:8px;padding:4px 6px}
+.nums small{display:block;font-size:10px;color:var(--muted)}.nums b{font-size:15px;font-variant-numeric:tabular-nums}
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;font-size:11px}
+.chip{border:1px solid var(--line);border-radius:6px;padding:2px 4px;text-align:center}.chip.on{background:#e8f5ea;border-color:#7cc488;font-weight:700}
+#chart{width:100%;height:190px;display:block}
+.note{font-size:11px;color:var(--muted)}
+#sel ul{margin:4px 0 0;padding-left:16px;font-size:12px}
+@media (max-width:820px){#app{display:block;height:auto}#stage{height:60vh;height:60dvh}#side{border-left:none}#legend{display:none}header h1{font-size:13px;width:100%}#capbox{bottom:6px;padding:6px 8px}#cap{font-size:12px}}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <h1 id="ttl"></h1>
+  <button id="bPow" class="pw">⏻ Power OFF</button>
+  <button id="bEn" title="GPIO pin that drives EN">EN: floating</button>
+  <button id="bDir">DIR: HIGH</button>
+  <button id="bRun">▶ STEP pulses</button>
+  <button id="bOne">+1 step</button>
+  <select id="rate" title="STEP pulses per second"><option value="1">1 /s</option><option value="2" selected>2 /s</option><option value="8">8 /s</option><option value="40">40 /s</option><option value="400">400 /s</option></select>
+  <span class="sp"></span>
+  <button id="bEl" title="Show conventional current (+ to −) or electrons (− to +)">Conventional current</button>
+  <button id="bLbl" class="on">Labels</button>
+  <button id="bTour" class="on">Tour</button>
+</header>
+<div id="stage">
+  <canvas id="c"></canvas><div id="lab"></div>
+  <div id="legend"><i style="background:var(--logic)"></i>logic loop (mA) <i style="background:var(--motor)"></i>motor loop (A) <i style="background:#2a9d3a"></i>pin HIGH (3.3 V)</div>
+  <div id="capbox"><div id="phase"></div><div id="cap"></div></div>
+</div>
+<div id="controls">
+  <div class="grp" id="layers"></div>
+  <div class="grp"><button data-cut="0" class="on">Solid</button><button data-cut="1">Glass</button></div>
+</div>
+<aside id="side">
+  <div class="card"><h3>Live values (from the model)</h3><div class="nums" id="nums"></div></div>
+  <div class="card"><h3>Driver H-bridges (MOSFETs)</h3><div class="chips" id="hb"></div>
+    <p class="note">HS = high-side switch (to VM), LS = low-side switch (to GND). Two diagonal switches on = current flows through the coil.</p></div>
+  <div class="card"><h3>Timing (last 4 s)</h3><canvas id="chart"></canvas></div>
+  <div class="card" id="sel"><h3>Selected part</h3><div class="note">Click or tap a part.</div></div>
+  <div class="card"><h3>Parts found in the photo</h3><ul id="photo" style="margin:0;padding-left:16px;font-size:12px"></ul></div>
+  <div class="card note" id="stepNote">
+    <b>Two loops.</b> The Pi sends commands only (mA). The motor current (A) flows in a separate loop: supply + → VM → H-bridge → coil → R<sub>sense</sub> → GND → supply −. It never goes through the Pi.<br><br>
+    <b>Model simplifications.</b> The motor shows a 2-pole rotor and 4 stator poles. A real 1.8° stepper has 8 stator poles with small teeth and a 50-tooth rotor, so it turns 50× less per step. The driver panel is a schematic, not the chip layout. The chopper PWM (about 20–40 kHz) is not shown. The glow speed is not the real electron speed (real drift is below 1 mm/s). One switch powers both the Pi and the motor supply.<br><br>
+    <b>Sources.</b> TMC2208 datasheet (STEP/DIR, sine microstep table, EN active low). ADI app note AN-045 (I<sub>RMS</sub> = 0.325 V/(R<sub>sense</sub>+0.03 Ω)/√2 · V<sub>ref</sub>/2.5 V). BTT TMC2208 V3.0 (pin order, R<sub>sense</sub> 0.11 Ω, board rated 12/24 V). Raspberry Pi 5 documentation (40-pin header, RP1 I/O chip). Seller data for 17HS15-1684S-PG27, not re-checked (1.8°, 1.68 A, ≈1.65 Ω, gear 26 103/121 : 1).<br><br>
+    <b>For learning only.</b> Check pin names on your real boards before you connect.
+  </div>
+</aside>
+</div>
+<script>// Stepper drive model: STEP/DIR/EN driver (TMC2208, A4988, DRV8825 class) + 2-phase hybrid stepper.
+// Pure functions, no three.js. One input drives everything: the microstep counter n.
+// Sources: TMC2208 datasheet (Trinamic/ADI) — STEP/DIR interface, sine-wave microstep table, EN active low;
+// ADI app note AN-045 — I_RMS = 0.325 V / (Rsense + 0.03 ohm) / sqrt2 * Vref / 2.5 V; Rsense 0.11 ohm (BTT module);
+// seller data for 17HS15-1684S-PG27 (not re-checked) — 1.8 deg/full step, 1.68 A, ~1.65 ohm, gear 26 103/121 : 1.
+(function (g) {
+  const TAU = 2 * Math.PI;
+  const DEF = {
+    micro: 8,            // microsteps per full step (TMC2208 MS1/MS2 open = 1/8)
+    vref: 1.0,           // V on the Vref pot
+    vm: 12,              // V motor supply
+    v3: 3.3,             // V logic
+    rPull: 1500,
+    rSense: 0.11,        // ohm on the BTT TMC2208 V3.0         // ohm pull-up on EN
+    rPhase: 1.65,        // ohm per phase (17HS15-1684S)
+    rotorTeeth: 50,      // hybrid rotor: 50 teeth -> 200 full steps / rev
+    gear: 26 + 103 / 121 // PG27 planetary gearbox
+  };
+  // cfg: {power, enPin (GPIO level 0/1 or null = floating -> pull-up HIGH), dir, n}
+  function at(cfg, p = DEF) {
+    p = Object.assign({}, DEF, p);
+    const enLevel = cfg.enPin == null ? 1 : cfg.enPin;          // pull-up makes floating EN HIGH
+    const enabled = !!cfg.power && enLevel === 0;               // EN is active LOW
+    const irms = 0.325 / (p.rSense + 0.03) / Math.SQRT2 * p.vref / 2.5;
+    const ipk = irms * Math.SQRT2;
+    const thE = cfg.n * (Math.PI / 2) / p.micro;                // one full step = 90 deg electrical
+    const iA = enabled ? ipk * Math.cos(thE) : 0;
+    const iB = enabled ? ipk * Math.sin(thE) : 0;
+    const mech = thE / p.rotorTeeth;                            // real rotor angle (rad)
+    const out = mech / p.gear;                                  // gearbox output (rad)
+    // H-bridge: positive current = high-side 1 + low-side 2 on. 0 = all off.
+    const hb = i => Math.abs(i) < 1e-9 ? [0, 0, 0, 0] : i > 0 ? [1, 0, 0, 1] : [0, 1, 1, 0]; // [HS1,LS1,HS2,LS2]
+    // Teaching stator (4 poles: A+ at 0 deg, B+ at 90, A- at 180, B- at 270).
+    // Rotor N points along field (iA, iB). The stator pole it faces shows S at its face.
+    const pole = i => Math.abs(i) < 1e-9 ? '' : i > 0 ? 'S' : 'N';
+    return {
+      enabled, enLevel, irms, ipk, thE, iA, iB, mech, out,
+      fieldOn: enabled, fieldAng: Math.atan2(iB, iA),
+      bridgeA: hb(iA), bridgeB: hb(iB),
+      poles: { 'A+': pole(iA), 'A-': pole(-iA), 'B+': pole(iB), 'B-': pole(-iB) },
+      iPull: cfg.power && cfg.enPin === 0 ? p.v3 / p.rPull : 0,   // A: 3V3 -> pull-up -> GPIO (LOW) -> Pi GND
+      // Supply current from power balance (losses ignored): the chopper makes it smaller than the coil current.
+      iSupply: enabled ? p.rPhase * (iA * iA + iB * iB) / p.vm : 0,
+      seqIndex: ((cfg.n % (4 * p.micro)) + 4 * p.micro) % (4 * p.micro),
+      deg: { thE: thE * 360 / TAU, mech: mech * 360 / TAU, out: out * 360 / TAU }
+    };
+  }
+  const S = { at, DEF };
+  if (typeof module !== 'undefined') module.exports = S; else g.StepSim = S;
+})(this);
+</script>
+<script type="application/json" id="scene"></script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+const $ = id => document.getElementById(id);
+addEventListener('hashchange', () => location.reload());
+// Scene source: inlined by build.py, else the URL hash (#<encoded JSON>), else a paste box.
+// The paste box lets any AI (ChatGPT, Gemini, ...) write only the scene JSON.
+let SC;
+try {
+  const t = document.getElementById('scene').textContent.trim();
+  SC = JSON.parse(t.startsWith('{') ? t : decodeURIComponent(location.hash.slice(1)));
+} catch (e) {
+  document.title = 'Circuit lab — paste a scene';
+  document.body.innerHTML = `<main style="max-width:720px;margin:auto;padding:16px">
+<h1 style="font-size:20px">3D circuit lab</h1>
+<p>Paste the scene JSON that your AI wrote, then press <b>Build 3D</b>. Code fences and extra text are OK.</p>
+${location.hash.length > 1 ? '<p style="color:#c00">The scene in the link is not valid JSON: ' + e.message.replace(/</g, '&lt;') + '</p>' : ''}
+<textarea id="tx" style="width:100%;height:50vh;font:12px ui-monospace,Consolas,monospace" placeholder='{ "title": "...", "parts": [...], "wires": [...] }'></textarea>
+<p><button id="go" style="background:#1d1d1f;color:#fff">Build 3D</button> <span id="er" style="color:#c00"></span></p>
+<p class="note">The page link then holds the whole scene: copy it to share the model. Example: <a href="stepper-circuit.html">Pi 5 + TMC2208 + NEMA 17</a>.</p></main>`;
+  $('go').onclick = () => {
+    const v = $('tx').value, a = v.indexOf('{'), b = v.lastIndexOf('}');
+    try { location.hash = encodeURIComponent(JSON.stringify(JSON.parse(v.slice(a, b + 1)))); location.reload(); }
+    catch (err) { $('er').textContent = 'Not valid JSON: ' + err.message; }
+  };
+  throw e;
+}
+const PRM = Object.assign({}, StepSim.DEF, SC.params || {});
+$('ttl').textContent = document.title = SC.title;
+const phone = matchMedia('(max-width:820px)').matches;
+
+// ---------- three.js setup ----------
+const cv = $('c'), stage = $('stage');
+const R = new THREE.WebGLRenderer({ canvas: cv, antialias: !phone });
+R.setPixelRatio(Math.min(phone ? 1.5 : 2, devicePixelRatio));
+const LR = new CSS2DRenderer({ element: $('lab') });
+const scn = new THREE.Scene(); scn.background = new THREE.Color(0xf4f1ec);
+const cam = new THREE.PerspectiveCamera(38, 1, 1, 4000);
+const HOME = { pos: new THREE.Vector3(10, 250, 300), tgt: new THREE.Vector3(0, 10, 0) };
+cam.position.copy(HOME.pos);
+const ctl = new OrbitControls(cam, cv); ctl.enableDamping = true; ctl.target.copy(HOME.tgt);
+scn.add(new THREE.HemisphereLight(0xffffff, 0x9a8f80, 1.7));
+const dl = new THREE.DirectionalLight(0xffffff, 1.5); dl.position.set(80, 220, 140); scn.add(dl);
+const table = new THREE.Mesh(new THREE.PlaneGeometry(700, 450), new THREE.MeshStandardMaterial({ color: 0xe7dfd2 }));
+table.rotation.x = -Math.PI / 2; table.position.y = -0.3; scn.add(table);
+
+// ---------- helpers ----------
+const REG = [], LABS = [], PANELS = [];
+const M = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: o.r ?? 0.55, metalness: o.m ?? 0.1, transparent: true, emissive: o.e ?? 0 });
+const BX = (w, h, d) => new THREE.BoxGeometry(w, h, d);
+const CY = (r, h, s = 24, t0 = 0, tl = Math.PI * 2) => new THREE.CylinderGeometry(r, r, h, s, 1, false, t0, tl);
+function add(parent, geo, mat, tags, pos = [0, 0, 0]) {
+  const m = new THREE.Mesh(geo, mat); m.position.set(...pos); m.userData.t = tags; parent.add(m); REG.push(m); return m;
+}
+function label(parent, text, pos, cls, tags) {
+  const d = document.createElement('div'); d.className = cls; d.textContent = text;
+  const o = new CSS2DObject(d); o.position.set(...pos); parent.add(o); LABS.push({ o, d, tags }); return o;
+}
+// Billboard panel with a 2D canvas (schematic views, code view). Faces the camera.
+function panel(parent, part, w, h, pos, draw) {
+  const c = document.createElement('canvas'); c.width = 640; c.height = Math.round(640 * h / w);
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  const m = add(parent, new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide }), { part, kind: 'panel' }, pos);
+  const ln = add(parent, new THREE.CylinderGeometry(0.25, 0.25, pos[1] - 6, 6), new THREE.MeshBasicMaterial({ color: 0x999999, transparent: true }), { part, kind: 'panel' }, [pos[0], (pos[1] + 6) / 2 - h / 2 + 3, pos[2]]);
+  PANELS.push({ m, c, ctx: c.getContext('2d'), tex, draw, part }); return m;
+}
+
+// ---------- part library ----------
+const PI_PIN = {1:'3V3',2:'5V',3:'GPIO2',4:'5V',5:'GPIO3',6:'GND',7:'GPIO4',8:'GPIO14',9:'GND',10:'GPIO15',11:'GPIO17',12:'GPIO18',13:'GPIO27',14:'GND',15:'GPIO22',16:'GPIO23',17:'3V3',18:'GPIO24',19:'GPIO10',20:'GND',21:'GPIO9',22:'GPIO25',23:'GPIO11',24:'GPIO8',25:'GND',26:'GPIO7',27:'GPIO0',28:'GPIO1',29:'GPIO5',30:'GND',31:'GPIO6',32:'GPIO12',33:'GPIO13',34:'GND',35:'GPIO19',36:'GPIO16',37:'GPIO26',38:'GPIO20',39:'GND',40:'GPIO21'};
+const DRV_L = ['GND', 'VIO', 'OB2', 'OB1', 'OA1', 'OA2', 'GNDM', 'VM'], DRV_R = ['DIR', 'STEP', 'CLK', 'PDN', 'NC', 'MS2', 'MS1', 'EN'];
+const DRV_ROLE = { GND: 'logic ground (same net as GNDM)', VIO: 'logic supply 3–5 V', OB2: 'coil B end 2', OB1: 'coil B end 1', OA1: 'coil A end 1', OA2: 'coil A end 2', GNDM: 'motor ground (to supply −)', VM: 'motor supply (chip 4.75–36 V, board rated 12/24 V)', DIR: 'direction input', STEP: 'one pulse = one microstep', CLK: 'clock (open = internal)', PDN: 'UART / power-down (open)', NC: 'not connected', MS2: 'microstep select 2 (open)', MS1: 'microstep select 1 (open)', EN: 'enable, active LOW' };
+const MOT_PINS = { A1: 'coil A, black', A2: 'coil A, green', B1: 'coil B, red', B2: 'coil B, blue' };
+const LIB = {};
+
+LIB.pi5 = (id) => {
+  const g = new THREE.Group(), pins = {}, T = k => ({ part: id, kind: k }), pinMesh = {};
+  add(g, BX(85, 1.4, 56), M(0x1d7a3c), T('board'), [0, 0.7, 0]);
+  add(g, BX(14, 1.6, 14), M(0xb8bcc2, { m: .7, r: .3 }), T('shell'), [-10, 2.2, 6]);
+  add(g, BX(8, 1.2, 8), M(0x222222), T('board'), [16, 2, 10]);
+  for (const z of [-18, -1]) add(g, BX(17, 15, 13), M(0xc9ccd1, { m: .8, r: .3 }), T('shell'), [34, 8.9, z]);
+  add(g, BX(21, 13.5, 16), M(0xc9ccd1, { m: .8, r: .3 }), T('shell'), [33, 8.2, 18]);
+  add(g, BX(50.8, 2.5, 5.1), M(0x111111), T('board'), [-3.5, 2.65, -24.6]);
+  for (let k = 1; k <= 40; k++) {
+    const col = Math.ceil(k / 2) - 1, x = -27.6 + col * 2.54, z = k % 2 ? -23.3 : -25.9;
+    pinMesh[k] = add(g, BX(.64, 6, .64), M(0xd4af37, { m: .9, r: .3 }), T('board'), [x, 6.9, z]);
+    pins[k] = [x, 10, z];
+  }
+  const path = new THREE.CatmullRomCurve3([[-10, 3.4, 6], [3, 3.4, 9], [16, 3.4, 10], [8, 3.4, -10], [-3.5, 4, -22]].map(p => new THREE.Vector3(...p)));
+  add(g, new THREE.TubeGeometry(path, 40, .5, 6), M(0x14a3d9, { e: 0x0a5a80 }), T('inner'));
+  label(g, 'BCM2712 SoC (CPU)', [-10, 6, 6], 'in', T('inner'));
+  label(g, 'RP1 I/O chip → GPIO pins', [16, 6, 14], 'in', T('inner'));
+  if (SC.sim === 'stepper') panel(g, id, 70, 46, [0, 62, 0], drawCode);
+  return {
+    g, pins, pinMesh,
+    pinName: k => k + ' · ' + (PI_PIN[k] || '?'),
+    info: { name: 'Raspberry Pi 5', text: 'A small computer. It runs your Python program. Each GPIO pin is a switch: 0 V (LOW) or 3.3 V (HIGH). On the Pi 5 the GPIO pins come from the RP1 I/O chip, not from the main SoC. A GPIO pin gives only a few mA. It sends commands, not motor power.' }
+  };
+};
+
+LIB.tmc2208 = (id) => {
+  const g = new THREE.Group(), pins = {}, T = k => ({ part: id, kind: k });
+  add(g, BX(15.2, 1.6, 20.3), M(0x4b3a8c), T('board'), [0, 0.8, 0]);
+  DRV_L.forEach((n, i) => { const z = -8.89 + i * 2.54; add(g, BX(.64, 6, .64), M(0xd4af37, { m: .9 }), T('board'), [-6.35, 4.6, z]); pins[n] = [-6.35, 8, z]; });
+  DRV_R.forEach((n, i) => { const z = -8.89 + i * 2.54; add(g, BX(.64, 6, .64), M(0xd4af37, { m: .9 }), T('board'), [6.35, 4.6, z]); pins[n] = [6.35, 8, z]; });
+  add(g, BX(9, 1, 9), M(0xb0b4ba, { m: .8, r: .35 }), T('shell'), [0, 3.4, 0]);
+  for (let i = 0; i < 5; i++) add(g, BX(9, 5, .8), M(0xb0b4ba, { m: .8, r: .35 }), T('shell'), [0, 6.4, -3.6 + i * 1.8]);
+  add(g, BX(5, .9, 6), M(0x111111), T('inner'), [0, 2.05, 0]);
+  add(g, BX(2, .6, 1.2), M(0x333333), T('board'), [-3, 1.9, 8.2]); add(g, BX(2, .6, 1.2), M(0x333333), T('board'), [3, 1.9, 8.2]);
+  add(g, CY(1.3, 1.2), M(0x2b6cd4), T('board'), [0, 2.2, -8]);
+  label(g, 'TMC2208 chip (under heatsink)', [0, 3, 0], 'in', T('inner'));
+  label(g, 'R_sense 0.11 Ω ×2', [0, 2.5, 9], 'in', T('inner'));
+  label(g, 'Vref pot', [0, 3, -8.5], 'in', T('inner'));
+  panel(g, id, 84, 52, [0, 66, 0], drawDie);
+  return { g, pins, pinName: n => n, info: { name: 'TMC2208 stepper driver (BTT V3.0)', text: 'Small signals in: STEP, DIR, EN at 3.3 V. Large motor current out: OA1/OA2 to coil A, OB1/OB2 to coil B. Inside: a STEP/DIR interface, a sequencer with a sine table, two current DACs, a chopper, and two H-bridges with 4 MOSFETs each. The current goes from VM, through the MOSFETs and the coil, through R_sense, to GND. Both GND pins are the same net.' }, roles: DRV_ROLE };
+};
+
+LIB.nema17_pg = (id) => {
+  const g = new THREE.Group(), pins = {}, T = k => ({ part: id, kind: k }), cy = 19.5;
+  add(g, BX(42.3, 31, 42.3), M(0x2b2d31, { r: .7 }), T('shell'), [0, cy, 0]);
+  add(g, BX(42.3, 4, 42.3), M(0xaeb3b9, { m: .7, r: .35 }), T('shell'), [0, 2, 0]);
+  add(g, BX(42.3, 4, 42.3), M(0xaeb3b9, { m: .7, r: .35 }), T('shell'), [0, 37, 0]);
+  add(g, CY(18, 28, 40), M(0xaeb3b9, { m: .8, r: .3 }), T('shell'), [0, 53, 0]);
+  add(g, BX(5, 10, 14), M(0xf2f2f2), T('board'), [23.6, 8, 0]);
+  [['A1', 0x222222, -4.5], ['A2', 0x2a9d3a, -1.5], ['B1', 0xd22222, 1.5], ['B2', 0x1c6dd0, 4.5]].forEach(([n, c, z]) => {
+    add(g, BX(2.4, 2.4, 2), M(c), T('board'), [26.4, 8, z]); pins[n] = [27.6, 8, z];
+  });
+  // output shaft (real angle)
+  const out = new THREE.Group(); out.position.set(0, 67, 0); g.add(out);
+  add(out, CY(4, 18), M(0xd0d4d8, { m: .9, r: .2 }), T('board'), [0, 9, 0]);
+  add(out, BX(1.2, 16, 5), M(0xd9480f), T('board'), [3.6, 9, 0]);
+  // stator (teaching model: 4 poles)
+  const back = add(g, new THREE.TorusGeometry(18.5, 2.2, 8, 48), M(0x8a8f96, { m: .6 }), T('inner'), [0, cy, 0]); back.rotation.x = Math.PI / 2;
+  const coils = {}, poleLab = {};
+  [['A+', 0], ['B+', 90], ['A-', 180], ['B-', 270]].forEach(([n, deg]) => {
+    const a = deg * Math.PI / 180, d = [Math.cos(a), 0, -Math.sin(a)];
+    const st = add(g, BX(9, 22, 5), M(0x9aa0a8, { m: .6 }), T('inner'), [d[0] * 12.5, cy, d[2] * 12.5]); st.rotation.y = a;
+    const co = add(g, new THREE.TorusGeometry(4, 1.5, 8, 24), M(0xb87333, { m: .7, r: .35 }), T('inner'), [d[0] * 13.5, cy, d[2] * 13.5]);
+    co.rotation.y = a + Math.PI / 2; co.scale.set(1, 2.4, 1); coils[n] = co;
+    poleLab[n] = label(g, '', [d[0] * 19, cy + 13, d[2] * 19], 'pol', T('inner'));
+    label(g, 'coil ' + n[0] + ' (' + n + ')', [d[0] * 22, cy - 13, d[2] * 22], 'in', T('inner'));
+  });
+  const rotor = new THREE.Group(); rotor.position.set(0, cy, 0); g.add(rotor);
+  add(rotor, CY(7, 22, 32, 0, Math.PI), M(0xd2373c), T('inner'));
+  add(rotor, CY(7, 22, 32, Math.PI, Math.PI), M(0x3a63c9), T('inner'));
+  add(rotor, CY(2.5, 66), M(0xd0d4d8, { m: .9 }), T('inner'), [0, 21, 0]);
+  const rN = label(rotor, 'N', [5, 13, 0], 'pol', T('inner')), rS = label(rotor, 'S', [-5, 13, 0], 'pol', T('inner'));
+  rN.element.style.background = '#d2373c'; rS.element.style.background = '#3a63c9';
+  const arrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, cy + 12.5, 0), 17, 0xffb000, 5, 3.5); g.add(arrow);
+  label(g, 'rotor: permanent magnet', [0, cy - 16, 0], 'in', T('inner'));
+  // planetary gearbox
+  const gb = new THREE.Group(); gb.position.set(0, 53, 0); g.add(gb);
+  const sun = add(gb, CY(4, 8, 12), M(0xc9a227, { m: .8 }), T('inner'));
+  const carrier = new THREE.Group(); gb.add(carrier);
+  for (let k = 0; k < 3; k++) { const a = k * 2 * Math.PI / 3; add(carrier, CY(5.5, 8, 12), M(0xd8b84a, { m: .8 }), T('inner'), [Math.cos(a) * 10, 0, Math.sin(a) * 10]); }
+  const ring = add(gb, new THREE.TorusGeometry(16, 1.3, 6, 40), M(0x8a8f96, { m: .6 }), T('inner')); ring.rotation.x = Math.PI / 2;
+  label(g, 'planetary gearbox 26.85 : 1', [0, 70, 20], 'in', T('inner'));
+  let shown = 0;
+  return {
+    g, pins, pinName: n => n + ' (' + MOT_PINS[n] + ')',
+    info: { name: 'Stepper motor 17HS15-1684S-PG27', text: 'Two coils (phase A and phase B) are wound on the stator, the part that does not turn. Current in a coil makes its pole faces into electromagnets: N or S. The rotor is a permanent magnet. Its N pole turns to the stator S pole. The driver changes the two coil currents in small steps, so the field turns and the rotor follows. The gearbox makes the output 26.85× slower and stronger.' },
+    upd(st, dt) {
+      if (st.enabled) shown += (st.thE - shown) * Math.min(1, dt * 10);
+      rotor.rotation.y = shown; sun.rotation.y = shown; carrier.rotation.y = shown / 5;
+      out.rotation.y = st.mech / PRM.gear;
+      const I = { 'A+': st.iA, 'A-': -st.iA, 'B+': st.iB, 'B-': -st.iB }, ip = st.ipk || 1;
+      for (const n in coils) {
+        const k = Math.min(1, Math.abs(I[n]) / ip), col = n[0] === 'A' ? [1, .45, 0] : [.2, .5, 1];
+        coils[n].material.emissive.setRGB(col[0] * k, col[1] * k, col[2] * k);
+        const p = st.poles[n], el = poleLab[n].element;
+        el.textContent = n + (p ? ' face: ' + p : ': off'); el.style.background = p === 'N' ? '#d2373c' : p === 'S' ? '#3a63c9' : '#999';
+      }
+      arrow.visible = st.enabled && VIEWVIS(id);
+      if (st.enabled) arrow.setDirection(new THREE.Vector3(Math.cos(st.thE), 0, -Math.sin(st.thE)));
+    }
+  };
+};
+
+LIB.psu = (id, sp) => {
+  const g = new THREE.Group(), T = k => ({ part: id, kind: k });
+  add(g, BX(60, 32, 44), M(0xb9bec4, { m: .7, r: .4 }), T('shell'), [0, 16, 0]);
+  add(g, BX(4, 8, 22), M(0x222222), T('board'), [31.5, 24, 0]);
+  add(g, CY(2, 3), M(0xd22222), T('board'), [31.5, 29.5, -6]); add(g, CY(2, 3), M(0x222222), T('board'), [31.5, 29.5, 6]);
+  const led = add(g, new THREE.SphereGeometry(1.4, 12, 8), M(0x335533), T('board'), [31, 10, 15]);
+  add(g, BX(20, 18, 16), M(0x444444), T('inner'), [-8, 12, 0]);
+  label(g, 'AC → DC switching converter', [-8, 26, 0], 'in', T('inner'));
+  label(g, '+', [33, 33, -6], 'pn', T('board')); label(g, '−', [33, 33, 6], 'pn', T('board'));
+  return { g, pins: { 'V+': [33.5, 31, -6], 'V-': [33.5, 31, 6] }, pinName: n => n === 'V+' ? '+ ' + PRM.vm + ' V' : '− (0 V)', info: { name: sp.label || 'DC power supply', text: 'Gives ' + PRM.vm + ' V DC for the motor. + is the high side. − is the return (0 V). All current that leaves + must come back into −.' }, upd(st) { led.material.emissive.setHex(S.power ? 0x22dd44 : 0); } };
+};
+
+LIB.resistor = (id, sp) => {
+  const g = new THREE.Group(), T = k => ({ part: id, kind: k });
+  const b = add(g, CY(1.3, 6.5, 16), M(0xe8d6b0), T('shell'), [0, 2.5, 0]); b.rotation.z = Math.PI / 2;
+  (sp.bands || ['#7a4b1c', '#2e8b3a', '#d22', '#c9a227']).forEach((c, i) => { const m = add(g, CY(1.36, .6, 16), M(c), T('shell'), [-2 + i * 1.3 + (i === 3 ? .6 : 0), 2.5, 0]); m.rotation.z = Math.PI / 2; });
+  for (const s of [-1, 1]) { const l = add(g, CY(.3, 4.5, 6), M(0xc0c0c0, { m: .9 }), T('board'), [s * 5.5, 2.5, 0]); l.rotation.z = Math.PI / 2; }
+  return { g, pins: { 1: [-7.5, 2.5, 0], 2: [7.5, 2.5, 0] }, pinName: n => 'end ' + n, info: { name: sp.label || 'Resistor', text: 'A pull-up resistor connects EN to 3.3 V. When nothing drives EN, the resistor holds it HIGH, so the driver stays off. When the Pi pulls the pin LOW, a small current flows: 3.3 V / ' + PRM.rPull + ' Ω = ' + (3.3 / PRM.rPull * 1000).toFixed(1) + ' mA.' } };
+};
+
+// Generic part: not in the library. Closed box, labelled pins, no invented internals.
+LIB.box = (id, sp) => {
+  const g = new THREE.Group(), T = k => ({ part: id, kind: k }), s = sp.size || [30, 12, 20];
+  add(g, BX(...s), M(sp.color || '#8899aa'), T('shell'), [0, s[1] / 2, 0]);
+  const pins = {}; for (const n in (sp.pins || {})) { pins[n] = sp.pins[n]; add(g, BX(1.2, 1.2, 1.2), M(0xd4af37, { m: .9 }), T('board'), sp.pins[n]); }
+  return { g, pins, pinName: n => n, info: { name: sp.label || sp.type, text: (sp.text || '') + ' Not in the part library: shown as a closed box. The inside is not modelled.' } };
+};
+
+// ---------- build scene ----------
+const PARTS = {};
+for (const p of SC.parts) {
+  const b = (LIB[p.type] || LIB.box)(p.id, p);
+  b.g.position.set(...p.at); b.g.rotation.y = (p.rot || 0) * Math.PI / 180; scn.add(b.g); b.g.updateMatrixWorld(true);
+  b.spec = p; PARTS[p.id] = b;
+  label(b.g, p.label || b.info.name, [0, (p.type === 'nema17_pg' ? 88 : p.type === 'psu' ? 40 : 18), 0], 'lb', { part: p.id, kind: 'name' });
+}
+const firstOf = t => Object.keys(PARTS).find(k => PARTS[k].spec.type === t);
+const ID = { pi: firstOf('pi5'), drv: firstOf('tmc2208'), mot: firstOf('nema17_pg') };
+const BAD = [];
+const pinW = ref => { const i = ref.indexOf('.'), P = PARTS[ref.slice(0, i)], v = P && P.pins[ref.slice(i + 1)]; if (!v) { BAD.push(ref); return null; } return P.g.localToWorld(new THREE.Vector3(...v)); };
+const pinLabeled = new Set();
+const COL = { logic: new THREE.Color('#14a3d9'), motor: new THREE.Color('#ff8a00'), el: new THREE.Color('#5a7dff') };
+const WIRES = SC.wires.filter(w => { const ok = pinW(w.a) && pinW(w.b); return ok; }).map((w, i) => {
+  const a = pinW(w.a), b = pinW(w.b), h = 12 + (i % 5) * 3, mid = a.clone().lerp(b, .5);
+  mid.y = Math.max(a.y, b.y) + h + a.distanceTo(b) * .12;
+  const curve = new THREE.CatmullRomCurve3([a, a.clone().setY(a.y + h * .5), mid, b.clone().setY(b.y + h * .5), b]);
+  const tube = add(scn, new THREE.TubeGeometry(curve, 90, .75, 8), M(w.color || '#888', { r: .45 }), { kind: 'wire', wire: i, loop: w.loop });
+  const N = Math.max(10, Math.round(curve.getLength() / 5)), pos = new Float32Array(N * 3);
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const pts = new THREE.Points(geo, new THREE.PointsMaterial({ size: phone ? 3.2 : 2.8, color: COL[w.loop] || COL.logic, transparent: true, depthTest: false }));
+  pts.renderOrder = 5; scn.add(pts);
+  const blob = new THREE.Mesh(new THREE.SphereGeometry(1.9, 12, 8), new THREE.MeshBasicMaterial({ color: 0x2bd44a, transparent: true, depthTest: false })); blob.visible = false; blob.renderOrder = 6; scn.add(blob);
+  for (const ref of [w.a, w.b]) if (!pinLabeled.has(ref)) {
+    pinLabeled.add(ref); const id = ref.split('.')[0], pn = ref.slice(id.length + 1), P = PARTS[id];
+    label(P.g, P.pinName ? P.pinName(isNaN(pn) ? pn : +pn) : pn, P.pins[pn].map((v, k) => k === 1 ? v + 2 : v), 'pn', { part: id, kind: 'pin', loop: w.loop });
+  }
+  return Object.assign({}, w, { curve, tube, pts, pos, N, u: Array.from({ length: N }, (_, k) => k / N), pulses: [], blob, parts: [w.a.split('.')[0], w.b.split('.')[0]] });
+});
+// Which Pi pin drives a driver input (for the code panel)
+const gpioFor = pin => { const w = SC.wires.find(w => [w.a, w.b].includes(ID.drv + '.' + pin) && [w.a, w.b].some(r => r.startsWith(ID.pi + '.'))); if (!w) return null; const k = +[w.a, w.b].find(r => r.startsWith(ID.pi + '.')).split('.')[1]; return { k, name: PI_PIN[k] }; };
+
+// ---------- state (one input: microstep counter n) ----------
+const S = { power: false, enPin: null, dir: 1, run: false, rate: 2, n: 0, t: 0, acc: 0, lastPulse: -9, electrons: false, labels: true, hist: [] };
+let st = StepSim.at({ power: 0, enPin: null, n: 0 }, PRM);
+function pulse() {
+  if (!S.power) return;
+  S.lastPulse = S.t;
+  if (st.enabled) S.n += S.dir;
+  for (const w of WIRES) if (w.sig === 'step') w.pulses.push(0);
+}
+const VIEW = { part: null, loop: null, glass: false };
+const VIEWVIS = id => VIEW.glass || VIEW.part === id;
+
+// ---------- UI ----------
+const btn = (id, f) => $(id).addEventListener('click', () => { userAct(); f(); syncUI(); });
+btn('bPow', () => { S.power = !S.power; if (!S.power) { S.run = false; S.enPin = null; } });
+btn('bEn', () => { S.enPin = S.enPin === null ? 0 : S.enPin === 0 ? 1 : null; });
+btn('bDir', () => { S.dir = -S.dir; });
+btn('bRun', () => { S.run = !S.run; });
+btn('bOne', () => pulse());
+$('rate').onchange = () => { userAct(); S.rate = +$('rate').value; };
+btn('bEl', () => { S.electrons = !S.electrons; });
+btn('bLbl', () => { S.labels = !S.labels; });
+$('bTour').addEventListener('click', () => { idle = 0; if (tour.on) { stopTour(); tour.off = true; } else { tour.off = false; startTour(); } });
+document.querySelectorAll('[data-cut]').forEach(b => b.addEventListener('click', () => { userAct(); VIEW.glass = b.dataset.cut === '1'; syncUI(); }));
+const LAYERS = [['Whole', null, null], ...['logic', 'motor'].filter(l => SC.wires.some(w => w.loop === l)).map(l => [l[0].toUpperCase() + l.slice(1) + ' loop', null, l])];
+if (ID.pi) LAYERS.push(['Pi inside', ID.pi, null]);
+if (ID.drv) LAYERS.push(['Driver inside', ID.drv, null]);
+if (ID.mot) LAYERS.push(['Motor inside', ID.mot, null]);
+LAYERS.forEach(([t, p, l]) => { const b = document.createElement('button'); b.textContent = t; b.onclick = () => { userAct(); setView(p, l); syncUI(); }; b._v = [p, l]; $('layers').append(b); });
+function setView(p, l) { VIEW.part = p; VIEW.loop = l; flyTo(p); }
+function syncUI() {
+  $('bPow').textContent = '⏻ Power ' + (S.power ? 'ON' : 'OFF'); $('bPow').classList.toggle('on', S.power);
+  $('bEn').textContent = 'EN: ' + (S.enPin === null ? 'floating (pull-up → HIGH)' : S.enPin ? 'GPIO HIGH' : 'GPIO LOW');
+  $('bDir').textContent = 'DIR: ' + (S.dir > 0 ? 'HIGH' : 'LOW');
+  $('bRun').textContent = S.run ? '■ Stop pulses' : '▶ STEP pulses'; $('bRun').classList.toggle('on', S.run);
+  $('bEl').textContent = S.electrons ? 'Electrons (− → +)' : 'Conventional current (+ → −)'; $('bEl').classList.toggle('on', S.electrons);
+  $('bLbl').classList.toggle('on', S.labels); $('bTour').classList.toggle('on', tour.on);
+  $('rate').value = S.rate;
+  document.querySelectorAll('[data-cut]').forEach(b => b.classList.toggle('on', (b.dataset.cut === '1') === VIEW.glass));
+  [...$('layers').children].forEach(b => b.classList.toggle('on', b._v[0] === VIEW.part && b._v[1] === VIEW.loop));
+}
+$('photo').innerHTML = (SC.photo || []).map(t => '<li>' + t.replace(/</g, '&lt;') + '</li>').join('');
+
+// camera fly
+let fly = null;
+function flyTo(id) {
+  const F = { pi5: [45, 0, 70, 150], tmc2208: [55, 0, 35, 150], nema17_pg: [35, 70, 60, 150] }[id && PARTS[id].spec.type] || [25, 30, 85, 130];
+  const tgt = id ? PARTS[id].g.position.clone().add(new THREE.Vector3(0, F[0], 0)) : HOME.tgt.clone();
+  const pos = id ? tgt.clone().add(new THREE.Vector3(F[1], F[2], F[3])) : HOME.pos.clone();
+  fly = { t: 0, p0: cam.position.clone(), t0: ctl.target.clone(), p1: pos, t1: tgt };
+}
+
+// selection
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2(); let down = null;
+cv.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; userAct(); });
+cv.addEventListener('pointerup', e => {
+  if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return;
+  const r = cv.getBoundingClientRect(); ptr.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
+  ray.setFromCamera(ptr, cam);
+  const hit = ray.intersectObjects(REG.filter(m => m.visible && m.material.opacity > .3), false)[0]; if (!hit) return;
+  const t = hit.object.userData.t;
+  if (t.wire !== undefined) return selWire(WIRES[t.wire]);
+  if (t.part) selPart(t.part);
+});
+function selPart(id) {
+  const P = PARTS[id], used = WIRES.flatMap(w => [w.a, w.b]).filter(r => r.startsWith(id + '.')).map(r => r.slice(id.length + 1));
+  $('sel').innerHTML = '<h3>Selected part</h3><b>' + P.info.name + '</b><p class="note" style="color:#3b3732;font-size:12px">' + P.info.text + '</p>' +
+    (used.length ? '<ul>' + [...new Set(used)].map(n => '<li><code>' + (P.pinName ? P.pinName(isNaN(n) ? n : +n) : n) + '</code>' + (P.roles && P.roles[n] ? ' — ' + P.roles[n] : '') + '</li>').join('') + '</ul>' : '');
+}
+function selWire(w) {
+  const what = { vio: 'logic supply for the driver (3.3 V)', glogic: 'logic return to the Pi GND', step: 'STEP command: one pulse = one microstep', dir: 'DIR command: HIGH or LOW sets the direction', pull: 'pull-up path for EN', vm: 'motor supply + (large current)', gmotor: 'motor return to supply −', iA: 'coil A current', iB: 'coil B current' }[w.sig] || '';
+  $('sel').innerHTML = '<h3>Selected wire</h3><b>' + w.a + ' → ' + w.b + '</b><p class="note" style="color:#3b3732;font-size:12px">' + what + '. Loop: ' + w.loop + '. Now: ' + fmtI(wireI(w)) + '.</p>';
+}
+
+// ---------- wire physics view ----------
+function wireI(w) {
+  const s = w.sig || '', neg = s[0] === '-', k = neg ? s.slice(1) : s;
+  if (k.startsWith('dc:')) return (neg ? -1 : 1) * (S.power ? parseFloat(k.slice(3)) : 0); // generic circuits: fixed current in A when powered
+  const I = { vio: S.power ? 0.003 : 0, glogic: S.power ? 0.003 + st.iPull : 0, pull: st.iPull, vm: st.iSupply, gmotor: st.iSupply, iA: st.iA, iB: st.iB }[k] || 0;
+  return neg ? -I : I;
+}
+function wireHigh(w) {
+  if (!S.power) return false;
+  if (w.sig === 'dir') return S.dir > 0;
+  if (w.sig === 'vio') return true;
+  if (w.level === 'en' || [w.a, w.b].includes(ID.drv + '.EN')) return st.enLevel === 1;
+  if (w.sig === 'pull') return true;   // 3V3 side of the pull-up
+  if (w.sig === 'step') return S.t - S.lastPulse < Math.min(.08, .45 / S.rate);
+  return false;
+}
+const fmtI = I => Math.abs(I) < 1e-9 ? '0' : Math.abs(I) < 0.1 ? (I * 1000).toFixed(1) + ' mA' : I.toFixed(2) + ' A';
+const tmpC = new THREE.Color();
+function updWires(dt) {
+  for (const w of WIRES) {
+    const I = wireI(w), mag = Math.abs(I), on = mag > 1e-7;
+    const op = w.tube.material.opacity;
+    const sp = (S.electrons ? -1 : 1) * Math.sign(I) * (0.05 + 0.32 * Math.min(1, Math.sqrt(mag)));
+    w.pts.visible = on && op > .2;
+    if (w.pts.visible) {
+      w.pts.material.color.copy(S.electrons ? COL.el : (COL[w.loop] || COL.logic)); w.pts.material.opacity = op;
+      for (let k = 0; k < w.N; k++) { w.u[k] = ((w.u[k] + sp * dt * 60 / w.curve.getLength() * 10) % 1 + 1) % 1; const p = w.curve.getPointAt(w.u[k]); w.pos.set([p.x, p.y, p.z], k * 3); }
+      w.pts.geometry.attributes.position.needsUpdate = true;
+    }
+    const hi = wireHigh(w);
+    w.tube.material.emissive.copy(hi ? tmpC.set(0x1f8f35) : tmpC.set(0)).multiplyScalar(hi ? .9 : 0);
+    // STEP pulses travel along the wire (voltage edge; the real edge moves near light speed)
+    w.pulses = w.pulses.map(u => u + dt * 1.6).filter(u => u < 1);
+    w.blob.visible = w.pulses.length > 0 && S.rate <= 8 && op > .2;
+    if (w.blob.visible) w.blob.position.copy(w.curve.getPointAt(w.pulses[w.pulses.length - 1]));
+  }
+}
+
+// ---------- visibility (layers + cutaway) ----------
+function applyVis() {
+  for (const m of REG) {
+    const t = m.userData.t; let o = 1, vis = true;
+    if (t.kind === 'wire') {
+      if (VIEW.loop && t.loop !== VIEW.loop) o = .07;
+      else if (VIEW.part && !WIRES[t.wire].parts.includes(VIEW.part)) o = .12;
+    } else {
+      const foc = VIEW.part === t.part;
+      if (t.kind === 'inner') vis = VIEW.glass || foc;
+      if (t.kind === 'panel') vis = foc;
+      if (t.kind === 'shell' && (VIEW.glass || foc)) o = .14;
+      if (VIEW.part && !foc) o *= .22;
+      if (VIEW.loop && t.kind !== 'inner') o *= .5;
+    }
+    m.visible = vis; m.material.opacity = o; m.material.depthWrite = o > .9;
+  }
+  for (const L of LABS) {
+    const t = L.tags; let v = S.labels;
+    if (t.kind === 'inner') v = v && VIEW.part === t.part;   // whole-bench glass view stays readable
+    if (t.kind === 'pin') v = v && ((VIEW.loop && VIEW.loop === t.loop) || VIEW.part === t.part);
+    if (t.kind === 'name' && VIEW.part && VIEW.part !== t.part) v = false;
+    L.o.visible = v; L.d.style.display = v ? '' : 'none';
+  }
+}
+
+// ---------- schematic panels ----------
+function drawDie(c, W, H) {
+  const ink = '#1d1d1f', mut = '#6b6660', on = '#2a9d3a', cur = S.electrons ? '#5a7dff' : '#ff8a00';
+  c.fillStyle = '#fffdf9'; c.fillRect(0, 0, W, H); c.strokeStyle = '#d8cfc0'; c.lineWidth = 3; c.strokeRect(2, 2, W - 4, H - 4);
+  c.fillStyle = ink; c.font = '700 17px system-ui'; c.fillText('Inside the TMC2208 (schematic, not to scale)', 14, 26);
+  const box = (x, y, w, h, t, lines) => { c.strokeStyle = '#bbb'; c.lineWidth = 2; c.strokeRect(x, y, w, h); c.fillStyle = ink; c.font = '700 13px system-ui'; c.fillText(t, x + 6, y + 17); c.font = '12px system-ui'; lines.forEach((l, i) => { c.fillStyle = l[1] || mut; c.fillText(l[0], x + 6, y + 35 + i * 16); }); };
+  const stepHi = S.power && S.t - S.lastPulse < .25;
+  box(10, 40, 160, 100, '1 · STEP/DIR/EN input', [['STEP ' + (stepHi ? '↑ pulse' : 'LOW'), stepHi ? on : mut], ['DIR ' + (S.power ? (S.dir > 0 ? 'HIGH → forward' : 'LOW → reverse') : '—')], ['EN ' + (S.power ? (st.enLevel ? 'HIGH → outputs OFF' : 'LOW → outputs ON') : '—'), st.enabled ? on : '#d2373c']]);
+  box(185, 40, 200, 100, '2 · Sequencer (sine table)', [['index ' + st.seqIndex + ' of ' + 4 * PRM.micro], ['each pulse: index ' + (S.dir > 0 ? '+1' : '−1')]]);
+  // mini sine/cos plot
+  const px = 195, py = 120, pw = 180, ph = 14;
+  c.lineWidth = 1.5; for (const [f, col] of [[Math.cos, '#ff8a00'], [Math.sin, '#3a63c9']]) { c.strokeStyle = col; c.beginPath(); for (let i = 0; i <= 60; i++) { const a = i / 60 * 2 * Math.PI; c.lineTo(px + i / 60 * pw, py - f(a) * ph); } c.stroke(); }
+  c.fillStyle = ink; c.fillRect(px + st.seqIndex / (4 * PRM.micro) * pw - 1, py - ph - 2, 2, 2 * ph + 4);
+  box(400, 40, 228, 100, '3 · DAC + chopper', [['I_A target ' + fmtI(st.iA), '#c25e00'], ['I_B target ' + fmtI(st.iB), '#2f55b4'], ['PWM ≈ 20–40 kHz holds each current']]);
+  const bridge = (ox, name, I, hb) => {
+    const xL = ox + 55, xR = ox + 245, yV = 178, yG = 388, yM = 282;
+    c.fillStyle = ink; c.font = '700 13px system-ui'; c.fillText('4 · H-bridge ' + name + '   I = ' + fmtI(I), ox + 4, 164);
+    c.strokeStyle = '#999'; c.lineWidth = 2; c.beginPath(); c.moveTo(xL, yV); c.lineTo(xR, yV); c.moveTo(xL, yG); c.lineTo(xR, yG); c.moveTo(xL, yV); c.lineTo(xL, yG - 30); c.moveTo(xR, yV); c.lineTo(xR, yG - 30); c.stroke();
+    c.fillStyle = mut; c.font = '11px system-ui'; c.fillText('VM ' + PRM.vm + ' V', ox + 120, yV - 4); c.fillText('GND', ox + 135, yG + 13);
+    [['HS1', xL, 215, hb[0]], ['LS1', xL, 320, hb[1]], ['HS2', xR, 215, hb[2]], ['LS2', xR, 320, hb[3]]].forEach(([t, x, y, s]) => { c.fillStyle = s ? on : '#eee'; c.fillRect(x - 22, y - 16, 44, 32); c.strokeStyle = '#888'; c.strokeRect(x - 22, y - 16, 44, 32); c.fillStyle = s ? '#fff' : ink; c.font = '700 11px system-ui'; c.fillText(t, x - 12, y + 4); });
+    c.strokeStyle = '#b87333'; c.lineWidth = 3; c.beginPath(); c.moveTo(xL, yM); for (let i = 0; i < 5; i++) c.arc(xL + 40 + i * 22, yM, 11, Math.PI, 0); c.lineTo(xR, yM); c.stroke();
+    c.fillStyle = mut; c.fillText('coil ' + name + ' (in the motor)', ox + 95, yM - 18);
+    c.fillStyle = '#555'; c.fillRect(ox + 140, yG - 34, 20, 12); c.fillText('R_sense', ox + 165, yG - 24);
+    c.strokeStyle = '#999'; c.lineWidth = 2; c.beginPath(); c.moveTo(xL, yG - 30); c.lineTo(xR, yG - 30); c.moveTo(ox + 150, yG - 22); c.lineTo(ox + 150, yG); c.stroke();
+    if (Math.abs(I) > 1e-6) {
+      const p = I > 0 ? [[xL, yV], [xL, yM], [xR, yM], [xR, yG - 30], [ox + 150, yG - 30], [ox + 150, yG]] : [[xR, yV], [xR, yM], [xL, yM], [xL, yG - 30], [ox + 150, yG - 30], [ox + 150, yG]];
+      c.strokeStyle = cur; c.lineWidth = 5; c.setLineDash([10, 8]); c.lineDashOffset = (S.electrons ? 1 : -1) * (S.t * 60 % 18);
+      c.beginPath(); p.forEach(q => c.lineTo(q[0], q[1])); c.stroke(); c.setLineDash([]);
+    }
+  };
+  bridge(8, 'A', st.iA, st.bridgeA); bridge(324, 'B', st.iB, st.bridgeB);
+}
+function drawCode(c, W, H) {
+  const g = n => { const r = gpioFor(n); return r ? r.name.replace('GPIO', '') : '?'; };
+  const L = ['from gpiozero import OutputDevice', 'from time import sleep', `step = OutputDevice(${g('STEP')})`, `dir  = OutputDevice(${g('DIR')})`, `en   = OutputDevice(${g('EN')})`, 'en.off()      # EN LOW -> driver ON', (S.dir > 0 ? 'dir.on()      # DIR HIGH' : 'dir.off()     # DIR LOW'), 'while True:', '    step.on()   # pulse: 3.3 V', '    step.off()  # back to 0 V', `    sleep(${(1 / S.rate).toFixed(3)})`];
+  const hiStep = S.t - S.lastPulse < .25;
+  const act = !S.power ? [] : S.enPin === null ? [] : S.enPin === 0 ? (S.run ? [5, 6, 7, hiStep ? 8 : 10] : [5, 6]) : [];
+  c.fillStyle = '#1e1e24'; c.fillRect(0, 0, W, H);
+  c.fillStyle = '#9aa0a8'; c.font = '700 15px system-ui'; c.fillText('motor.py on the Pi — ' + (!S.power ? 'Pi is off' : S.enPin === null ? 'program not started: GPIO pins are inputs' : 'running'), 12, 22);
+  c.font = '15px ui-monospace,Consolas,monospace';
+  L.forEach((l, i) => { const y = 50 + i * 23; if (act.includes(i)) { c.fillStyle = 'rgba(242,162,12,.28)'; c.fillRect(6, y - 16, W - 12, 21); } c.fillStyle = act.includes(i) ? '#ffd27a' : '#d4d4d4'; c.fillText(l, 14, y); });
+}
+
+// ---------- side panel ----------
+const NUM = [['Power', () => S.power ? 'ON' : 'OFF'], ['EN level', () => S.power ? (st.enLevel ? 'HIGH' : 'LOW') : '—'], ['Driver', () => st.enabled ? 'ON' : 'OFF'],
+  ['Step n', () => S.n], ['θ elec', () => st.deg.thE.toFixed(1) + '°'], ['DIR', () => S.dir > 0 ? 'HIGH' : 'LOW'],
+  ['I coil A', () => fmtI(st.iA)], ['I coil B', () => fmtI(st.iB)], ['I supply', () => fmtI(st.iSupply)],
+  ['Rotor (real)', () => st.deg.mech.toFixed(2) + '°'], ['Output shaft', () => st.deg.out.toFixed(3) + '°'], ['EN pull-up', () => fmtI(st.iPull)]];
+$('nums').innerHTML = NUM.map((x, i) => '<div><small>' + x[0] + '</small><b id="nv' + i + '"></b></div>').join('');
+const HBN = ['HS1', 'LS1', 'HS2', 'LS2'];
+$('hb').innerHTML = ['A', 'B'].flatMap(b => HBN.map(n => '<div class="chip" id="hb' + b + n + '">' + b + ' ' + n + '</div>')).join('');
+function updSide() {
+  NUM.forEach((x, i) => $('nv' + i).textContent = x[1]());
+  HBN.forEach((n, i) => { $('hbA' + n).classList.toggle('on', !!st.bridgeA[i]); $('hbB' + n).classList.toggle('on', !!st.bridgeB[i]); });
+  const c = $('chart'), w = c.clientWidth, h = c.clientHeight; if (c.width !== w * 2) { c.width = w * 2; c.height = h * 2; }
+  const x = c.getContext('2d'); x.setTransform(2, 0, 0, 2, 0, 0); x.clearRect(0, 0, w, h);
+  const rows = [['STEP', s => s.step, '#2a9d3a', 0, 1], ['DIR', s => s.dir, '#8a3ffc', 0, 1], ['EN', s => s.en, '#e67700', 0, 1], ['I_A', s => s.iA, '#ff8a00', -1, 1], ['I_B', s => s.iB, '#3a63c9', -1, 1]];
+  const rh = h / rows.length, t1 = S.t, t0 = t1 - 4, ip = st.ipk || 1;
+  rows.forEach(([n, f, col, lo, hi], r) => {
+    const y0 = r * rh; x.fillStyle = '#6b6660'; x.font = '10px system-ui'; x.fillText(n, 2, y0 + 11);
+    x.strokeStyle = '#eee'; x.beginPath(); x.moveTo(30, y0 + rh - 3); x.lineTo(w, y0 + rh - 3); x.stroke();
+    x.strokeStyle = col; x.lineWidth = 1.5; x.beginPath();
+    S.hist.forEach((s, i) => { const v = (n[0] === 'I' ? f(s) / ip : f(s)), xx = 30 + (s.t - t0) / 4 * (w - 30), yy = y0 + rh - 7 - (v - lo) / (hi - lo) * (rh - 16); i ? x.lineTo(xx, yy) : x.moveTo(xx, yy); });
+    x.stroke();
+  });
+}
+
+// ---------- tour + captions ----------
+const STEPPER = SC.sim === 'stepper' && ID.drv;
+const enG = (gpioFor('EN') || { k: '?', name: 'GPIO?' }), mA = (PRM.v3 / PRM.rPull * 1000).toFixed(1), kOhm = (PRM.rPull / 1000) + ' kΩ';
+const TOUR = !STEPPER ? [
+  ['Parts from your photo', 'These are the parts from your photo, wired as the datasheets say. Power is off.', () => { S.power = false; setView(null, null); }],
+  ['Power on', 'Power is on. The glow shows where current flows: out of + and back into −. Click a part or a wire to read about it.', () => { S.power = true; }],
+  ['Look inside', 'Glass mode makes the cases see-through. Parts outside the library stay closed boxes.', () => { VIEW.glass = true; }]
+] : [
+  ['Parts from your photo', 'These are the parts from your photo, wired as the datasheets say. Power is off. Nothing moves.', () => { S.power = false; S.run = false; S.enPin = null; setView(null, null); VIEW.glass = false; }],
+  ['Two separate loops', 'The logic loop (blue) carries commands at milliamps: Pi 3V3 → driver VIO, and back through GND. STEP, DIR and EN are only voltage signals.', () => setView(null, 'logic')],
+  ['The motor loop', 'The motor loop (orange) carries amperes: supply + → VM → H-bridge → coil → R_sense → GND → supply −. This current never goes through the Pi.', () => setView(null, 'motor')],
+  ['Power on — driver stays off', 'Power is on. The program has not started, so ' + enG.name + ' is an input. The pull-up resistor holds EN HIGH. EN is active LOW, so the H-bridges stay off. No coil current.', () => { S.power = true; S.enPin = null; setView(null, null); }],
+  ['The program starts', 'en.off() makes ' + enG.name + ' (pin ' + enG.k + ') LOW. Now EN is LOW and the driver is on. 3.3 V / ' + kOhm + ' = ' + mA + ' mA flows through the resistor into the Pi pin. Look at the code panel.', () => { S.enPin = 0; setView(ID.pi, null); }],
+  ['Holding current', 'The driver is on. Coil A gets current, coil B gets zero. The rotor is held in one position. This is the holding torque.', () => setView(ID.drv, null)],
+  ['One STEP pulse', 'Each pulse on STEP moves the sequencer one index in the sine table. The DAC sets new target currents. Two diagonal MOSFETs in each H-bridge are on, and current flows through the coil.', () => { S.rate = 1; S.run = true; }],
+  ['Inside the motor', 'Coil current makes each stator pole face N or S. The rotor N pole turns to the stator S pole. When the currents change, the field turns and the rotor follows.', () => { setView(ID.mot, null); S.rate = 2; }],
+  ['Change direction', 'DIR goes LOW. The sequencer now counts down. The field turns the other way, and the rotor follows.', () => { S.dir = -1; }],
+  ['Electrons go the other way', 'Conventional current flows from + to −. Electrons flow from − to +. Their real speed is below 1 mm/s. The signal moves at almost the speed of light.', () => { S.electrons = true; setView(null, 'motor'); }],
+  ['Fast stepping', 'At 400 pulses per second the steps blend into smooth rotation. The supply current is smaller than the coil current: the chopper takes only the power it needs from ' + PRM.vm + ' V.', () => { S.electrons = false; S.dir = 1; S.rate = 400; VIEW.glass = true; setView(null, null); }]
+];
+const tour = { on: false, i: 0, t: 0, off: false }; let idle = 0;
+for (const ev of ['pointerdown', 'wheel', 'touchstart', 'keydown']) addEventListener(ev, () => { idle = 0; }, { capture: true, passive: true });
+$('side').addEventListener('scroll', () => { idle = 0; }, { passive: true });
+function startTour() { tour.on = true; tour.i = 0; tour.t = 0; TOUR[0][2](); syncUI(); }
+function stopTour() { tour.on = false; syncUI(); }
+function userAct() { idle = 0; if (tour.on) stopTour(); }
+function caption() {
+  if (BAD.length) return ['Scene error', 'Unknown pin(s): ' + BAD.join(', ') + '. These wires are not drawn. Check the pin names in the scene.'];
+  if (tour.on) return TOUR[tour.i];
+  if (!STEPPER) return S.power ? ['Power on', 'Current flows out of + and back into −. Click a part or a wire.'] : ['Power is off', 'Press ⏻ Power.'];
+  if (!S.power) return ['Power is off', 'Press ⏻ Power. Then set EN LOW and send STEP pulses. Use the layer buttons to look inside each part.'];
+  if (!st.enabled) return ['Driver is off', 'EN is HIGH (' + (S.enPin === null ? 'the pull-up resistor holds it HIGH' : 'GPIO drives it HIGH') + '). EN is active LOW, so the H-bridges are off and no coil current flows. Set EN LOW.'];
+  if (!S.run) return ['Holding', 'The driver is on and holds the rotor with coil currents A = ' + fmtI(st.iA) + ', B = ' + fmtI(st.iB) + '. Press ▶ STEP pulses or +1 step.'];
+  return ['Stepping', 'Each STEP pulse = 1/' + PRM.micro + ' full step = ' + (1.8 / PRM.micro).toFixed(3) + '° on the real rotor. Coil currents follow a cosine (A) and a sine (B).'];
+}
+
+// ---------- loop ----------
+function resize() { const w = stage.clientWidth, h = stage.clientHeight; R.setSize(w, h, false); LR.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+{ const k = Math.max(1, 1.75 / cam.aspect); HOME.pos.set(0, 215 * k, 265 * k); cam.position.copy(HOME.pos); } // fit whole bench
+let last = performance.now(), sideT = 0, capKey = '';
+function frame(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now; S.t += dt; idle += dt;
+  if (tour.on) { tour.t += dt; if (tour.t > 9) { tour.t = 0; tour.i = (tour.i + 1) % TOUR.length; TOUR[tour.i][2](); syncUI(); } }
+  else if (idle > 25 && !tour.off) startTour();
+  if (S.run && S.power) { S.acc += dt * S.rate; while (S.acc >= 1) { S.acc -= 1; pulse(); } }
+  st = StepSim.at({ power: S.power, enPin: S.power ? S.enPin : null, n: S.n }, PRM);
+  S.hist.push({ t: S.t, step: S.power && S.t - S.lastPulse < Math.min(.06, .45 / S.rate) ? 1 : 0, dir: S.power && S.dir > 0 ? 1 : 0, en: S.power ? st.enLevel : 0, iA: st.iA, iB: st.iB });
+  while (S.hist.length && S.hist[0].t < S.t - 4) S.hist.shift();
+  for (const id in PARTS) PARTS[id].upd && PARTS[id].upd(st, dt);
+  if (ID.pi) { const P = PARTS[ID.pi]; for (const w of WIRES) for (const r of [w.a, w.b]) if (r.startsWith(ID.pi + '.')) { const k = +r.split('.')[1], m = P.pinMesh[k]; if (m) m.material.emissive.setHex(wireHigh(w) ? 0x2bd44a : 0); } }
+  applyVis(); updWires(dt);
+  for (const p of PANELS) if (p.m.visible) { p.draw(p.ctx, p.c.width, p.c.height); p.tex.needsUpdate = true; p.m.quaternion.copy(cam.quaternion); }
+  if (fly) { fly.t = Math.min(1, fly.t + dt / 1.1); const e = 1 - Math.pow(1 - fly.t, 3); cam.position.lerpVectors(fly.p0, fly.p1, e); ctl.target.lerpVectors(fly.t0, fly.t1, e); if (fly.t >= 1) fly = null; }
+  ctl.update(); R.render(scn, cam); LR.render(scn, cam);
+  sideT += dt; if (sideT > .1) { sideT = 0; updSide(); const [ph, cp] = caption(); if (ph + cp !== capKey) { capKey = ph + cp; $('phase').textContent = ph; $('cap').textContent = cp; } }
+  requestAnimationFrame(frame);
+}
+if (!STEPPER) { for (const id of ['bEn', 'bDir', 'bRun', 'bOne', 'rate', 'stepNote']) $(id).style.display = 'none'; for (const id of ['hb', 'chart']) $(id).closest('.card').style.display = 'none'; NUM.splice(1); $('nums').innerHTML = '<div><small>Power</small><b id="nv0"></b></div>'; }
+startTour(); requestAnimationFrame(frame);
+</script>
+</body>
+</html>
