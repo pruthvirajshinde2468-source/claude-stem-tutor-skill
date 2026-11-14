@@ -16,7 +16,7 @@
 - 🔌 [Raspberry Pi 5 + stepper driver + motor — 3D circuit lab](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/stepper-circuit.html) (photo → 3D mode)
 - ⚙️ [Reaction wheel — how a spacecraft turns without fuel](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/reaction-wheel.html)
 
-[![Example output: a stem-tutor lesson](docs/img/preview.png)](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/)
+[![3D circuit lab: Raspberry Pi 5 + TMC2208 driver + NEMA 17 stepper, power on, current flowing](docs/img/preview.jpg)](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/stepper-circuit.html)
 
 ---
 
@@ -46,7 +46,7 @@ It is also **fast and token-efficient**: it writes each diagram once, reuses one
 
 ## Install
 
-Current version: **v2.1.0**. See [CHANGELOG.md](CHANGELOG.md).
+Current version: **v2.1.1**. See [CHANGELOG.md](CHANGELOG.md).
 
 ### Claude.ai (web, desktop and mobile app)
 1. Download **`stem-tutor-v2.1.0.zip`** from the [Releases](../../releases) page (or zip the `skills/stem-tutor` folder yourself).
