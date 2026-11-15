@@ -2,10 +2,10 @@
 name: stem-tutor
 description: Explain engineering, physics, math, code and medical topics in ASD-STE100 Simplified Technical English, with a physical meaning for every equation, diagrams, animations, optional interactive 3D models, and a phone-friendly HTML study file. Also turns a photo of electronics parts (Raspberry Pi, stepper driver, motor, power supply, resistors) into an interactive 3D circuit with see-through parts and animated current flow. Use when the user wants to learn or understand a technical or medical topic, or sends a photo of hardware and asks how it works.
 metadata:
-  version: "2.1.2"
+  version: "2.1.3"
 ---
 
-# STEM Tutor v2.1.2 — Simplified Technical English explainer
+# STEM Tutor v2.1.3 — Simplified Technical English explainer
 
 Use this skill when the user wants to learn a technical topic (GNC, control, math, code, physics, machines, spacecraft hardware) or a medical topic (anatomy, physiology, pharmacology).
 

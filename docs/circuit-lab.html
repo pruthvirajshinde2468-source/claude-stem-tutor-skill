@@ -39,7 +39,7 @@ button.pw.on{background:#2a9d3a;border-color:#2a9d3a}
 #chart{width:100%;height:190px;display:block}
 .note{font-size:11px;color:var(--muted)}
 #sel ul{margin:4px 0 0;padding-left:16px;font-size:12px}
-@media (max-width:820px){#app{display:block;height:auto}#stage{height:60vh;height:60dvh}#side{border-left:none}#legend{display:none}header h1{font-size:13px;width:100%}#capbox{bottom:6px;padding:6px 8px}#cap{font-size:12px}}
+@media (max-width:820px){#app{display:block;height:auto}#stage{height:60vh;height:60dvh}#side{border-left:none}#legend{display:none}header h1{font-size:13px;width:100%}#capbox{bottom:6px;padding:6px 8px}#cap{font-size:12px}.lb{font-size:10px;padding:0 4px}.pn{font-size:9px}}
 </style>
 </head>
 <body>
@@ -620,7 +620,16 @@ function caption() {
 // ---------- loop ----------
 function resize() { const w = stage.clientWidth, h = stage.clientHeight; R.setSize(w, h, false); LR.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix(); }
 addEventListener('resize', resize); resize();
-{ const k = Math.max(1, 1.75 / cam.aspect); HOME.pos.set(0, 215 * k, 265 * k); cam.position.copy(HOME.pos); } // fit whole bench
+const PHONE_PAD = 60, PHONE_LEN = 1.75; // phone framing knobs: margin (mm) and distance per mm of bench length
+if (cam.aspect >= 1) { const k = Math.max(1, 1.75 / cam.aspect); HOME.pos.set(0, 215 * k, 265 * k); } // fit whole bench
+else { // portrait phone: look along x so the long side of the bench runs up the screen, then fit its width
+  const bb = new THREE.Box3(); for (const k in PARTS) bb.expandByPoint(PARTS[k].g.position);
+  const c = bb.getCenter(new THREE.Vector3()), sz = bb.getSize(new THREE.Vector3()).addScalar(PHONE_PAD);
+  const hf = Math.atan(Math.tan(THREE.MathUtils.degToRad(cam.fov) / 2) * cam.aspect);
+  const d = Math.max(sz.z / 2 / Math.tan(hf), sz.x * PHONE_LEN);
+  HOME.tgt.set(c.x + 25, 10, c.z); /* +25 mm: lift the bench above the caption box */ HOME.pos.copy(HOME.tgt).add(new THREE.Vector3(.62, .78, 0).multiplyScalar(d));
+}
+cam.position.copy(HOME.pos); ctl.target.copy(HOME.tgt);
 let last = performance.now(), sideT = 0, capKey = '';
 function frame(now) {
   const dt = Math.min(.05, (now - last) / 1000); last = now; S.t += dt; idle += dt;

@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| **Current version** | **v2.1.2** (2026-11-14) |
+| **Current version** | **v2.1.3** (2026-11-15) |
 | **Repo** | https://github.com/pruthvirajshinde2468-source/claude-stem-tutor-skill |
-| **Download** | [stem-tutor-v2.1.2.zip](https://github.com/pruthvirajshinde2468-source/claude-stem-tutor-skill/releases/download/v2.1.2/stem-tutor-v2.1.2.zip) ([release page](https://github.com/pruthvirajshinde2468-source/claude-stem-tutor-skill/releases/tag/v2.1.2)) |
+| **Download** | [stem-tutor-v2.1.3.zip](https://github.com/pruthvirajshinde2468-source/claude-stem-tutor-skill/releases/download/v2.1.3/stem-tutor-v2.1.3.zip) ([release page](https://github.com/pruthvirajshinde2468-source/claude-stem-tutor-skill/releases/tag/v2.1.3)) |
 | **Live demos** | [All examples](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/) · [3D stepper circuit](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/stepper-circuit.html) · [3D circuit lab (paste from any AI)](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/circuit-lab.html) · [Heart 3D](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/heart.html) |
 | **License** | MIT, free |
 
@@ -20,6 +20,7 @@ A free AI tutor skill that explains engineering, physics, math, code and medicin
 | **v2.1.0** | **Works with any AI.** The whole skill is one prompt for ChatGPT, Gemini, Copilot and others. Those AIs write a short scene file; the hosted circuit-lab page turns it into the 3D model, with a link you can share. Version numbers and a CHANGELOG were added. |
 | **v2.1.1** | The README picture now shows the 3D stepper circuit. No change to the skill. |
 | **v2.1.2** | **Security fix.** Text from a shared 3D-lab link is shown as plain text, so a bad link cannot run code. |
+| **v2.1.3** | **Phone view.** On a portrait phone the 3D bench fills the screen from top to bottom, and the labels no longer overlap. |
 
 ## The 3 best features
 
@@ -41,7 +42,7 @@ A free AI tutor skill that explains engineering, physics, math, code and medicin
 - **Simplified motor:** the rotor is drawn with 2 poles (a real NEMA 17 has 50 teeth). The page marks this as a simplification. The step angles and currents still come from the real model.
 - **Not yet tested end to end:** a real user photo through the whole flow, and the portable prompt inside ChatGPT or Gemini.
 - **Needs internet:** the 3D pages and the math load three.js and KaTeX from a CDN.
-- **Phone view:** the 3D stepper model starts small and its labels overlap until you zoom in.
+- **Phone in landscape:** the 3D view uses the desktop framing, so two labels can touch. Portrait is the best phone view.
 - **Data sources:** the motor values are seller data. The driver's 12/24 V rating comes from the BTT wiki, because the BTT manual could not be fetched.
 - **For learning only:** check pin names on your real boards before you connect them. The medical mode is not for patient decisions.
 
