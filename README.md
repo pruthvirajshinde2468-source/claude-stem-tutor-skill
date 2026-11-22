@@ -13,24 +13,13 @@
 
 - 🫀 [The human heart — 3D teardown](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/heart.html) (medical mode, deep)
 - 🛰️ [Spacecraft attitude — Euler angles, DCM and quaternions](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/spacecraft-attitude.html) (aerospace/GNC)
-- 🔌 [Raspberry Pi 5 + stepper driver + motor — 3D circuit lab](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/stepper-circuit.html) (photo → 3D mode)
-- 🧩 [3D circuit lab — paste a scene from any AI](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/circuit-lab.html)
 - ⚙️ [Reaction wheel — how a spacecraft turns without fuel](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/reaction-wheel.html)
-
-[![3D circuit lab: Raspberry Pi 5 + TMC2208 driver + NEMA 17 stepper, power on, current flowing](docs/img/preview.jpg)](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/stepper-circuit.html)
 
 ---
 
-## New: photo → 3D circuit lab
+## Sister skill: photo → 3D circuit
 
-Send Claude a photo of your electronics parts (for example a Raspberry Pi, a stepper driver, a motor and a power supply). The skill names each part, takes the wiring from the datasheets, and builds one interactive 3D page:
-
-- **See-through layers:** whole bench, logic loop, motor loop, inside the Pi, inside the driver (H-bridges, sequencer), inside the motor (coils, N/S pole faces, rotor, gearbox).
-- **Power switch and live current flow:** glowing particles show where current goes, in conventional or electron direction.
-- **Commands you can send:** EN, DIR, STEP pulses. Live values, MOSFET states and a timing chart follow one model.
-- **Fast and token-light:** the 3D engine ships with the skill. For each photo Claude writes only a ~40-line scene file.
-
-Parts in the library now: Raspberry Pi 5, TMC2208 (BTT V3.0), NEMA 17 with planetary gearbox, DC supply, resistor. Any other part is shown as a labelled closed box.
+The photo → 3D circuit lab (Raspberry Pi, stepper driver, motor) was part of this skill up to v2.1.3. It is now its own skill: **[Hardware Circuit Visualizer](https://github.com/pruthvirajshinde2468-source/claude-hardware-circuit-visualizer-skill)**. STEM Tutor stays focused on learning topics.
 
 ## Why this skill
 
@@ -47,10 +36,10 @@ It is also **fast and token-efficient**: it writes each diagram once, reuses one
 
 ## Install
 
-Current version: **v2.1.3**. See [CHANGELOG.md](CHANGELOG.md).
+Current version: **v3.0.0**. See [CHANGELOG.md](CHANGELOG.md).
 
 ### Claude.ai (web, desktop and mobile app)
-1. Download **`stem-tutor-v2.1.3.zip`** from the [Releases](../../releases) page (or zip the `skills/stem-tutor` folder yourself).
+1. Download **`stem-tutor-v3.0.0.zip`** from the [Releases](../../releases) page (or zip the `skills/stem-tutor` folder yourself).
 2. In Claude, open **Settings → Customize → Skills → Add → Upload skill** and pick the zip.
 3. Start a chat and ask: *"Explain how a PID controller works."*
 
@@ -67,7 +56,7 @@ The whole skill is also one plain-text prompt: [`portable/STEM-TUTOR-PROMPT.md`]
 - **Any other AI:** paste the file as the first message.
 
 The AI gives you one HTML study file in a code block: save it as `lesson.html` and open it in a browser.
-For a photo of electronics parts, the AI writes a short scene JSON. Paste it into the **[3D circuit lab](https://pruthvirajshinde2468-source.github.io/claude-stem-tutor-skill/circuit-lab.html)** and press **Build 3D**. The page link then holds the whole model, so you can share it.
+For a photo of electronics parts, use the [Hardware Circuit Visualizer](https://github.com/pruthvirajshinde2468-source/claude-hardware-circuit-visualizer-skill) prompt instead.
 
 ### Coding agents (OpenAI Codex, Gemini CLI, Cursor, GitHub Copilot)
 `skills/stem-tutor/SKILL.md` uses the open Agent Skills format. Copy the `skills/stem-tutor` folder into the agent's skills folder (for example `~/.codex/skills/` or `.agents/skills/`) or point the agent at `SKILL.md`.

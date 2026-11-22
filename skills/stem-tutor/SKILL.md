@@ -1,11 +1,11 @@
 ---
 name: stem-tutor
-description: Explain engineering, physics, math, code and medical topics in ASD-STE100 Simplified Technical English, with a physical meaning for every equation, diagrams, animations, optional interactive 3D models, and a phone-friendly HTML study file. Also turns a photo of electronics parts (Raspberry Pi, stepper driver, motor, power supply, resistors) into an interactive 3D circuit with see-through parts and animated current flow. Use when the user wants to learn or understand a technical or medical topic, or sends a photo of hardware and asks how it works.
+description: Explain engineering, physics, math, code and medical topics in ASD-STE100 Simplified Technical English, with a physical meaning for every equation, diagrams, animations, optional interactive 3D models, and a phone-friendly HTML study file. Use when the user wants to learn or understand a technical or medical topic. Not for a photo of electronics parts: use hardware-circuit-visualizer for that.
 metadata:
-  version: "2.1.3"
+  version: "3.0.0"
 ---
 
-# STEM Tutor v2.1.3 — Simplified Technical English explainer
+# STEM Tutor v3.0.0 — Simplified Technical English explainer
 
 Use this skill when the user wants to learn a technical topic (GNC, control, math, code, physics, machines, spacecraft hardware) or a medical topic (anatomy, physiology, pharmacology).
 
@@ -150,32 +150,9 @@ Review: only when a 3D page was built. Take 3 Playwright screenshots (two input 
 - Call Common errors "Common confusions". Self-check: one clinical-style question.
 - No photos of real patients. No copied textbook figures.
 
-## 8. Photo → 3D circuit lab (circuit3d)
+## 8. Photo of electronics parts
 
-Use when the user sends a photo of electronics parts and wants to see how they work together. The output is one HTML page: 3D parts, see-through layers, a power switch, current flow in the wires, the inside of the driver and motor, live values, a timing chart and an auto tour.
-
-**Speed rule: the engine is finished. Never rewrite it.** `circuit3d/viewer.html` + `circuit3d/sim.js` are fixed. For each photo, write only a small scene JSON (about 40 lines), then build:
-```
-python <skill folder>/circuit3d/build.py scene.json <topic>_3d.html
-```
-Start from `circuit3d/scenes/pi5_tmc2208_nema17.json`. Change only what the photo shows.
-
-Steps:
-1. **Name the parts.** Read the markings in the photo. List each part in `"photo"`. If a part number cannot be read and it changes the wiring, ask one question. Otherwise take the common variant and say so.
-2. **Wiring comes from datasheets, not from the photo.** The parts in the photo are not connected. Take pin names and connections from the datasheet or the part library. Never guess a pin.
-3. **Write the scene.** Library types and their pin names:
-   - `pi5` — physical pin numbers 1–40 (`"pi.11"`).
-   - `tmc2208` — BTT TMC2208 V3.0 pin order: `GND VIO OB2 OB1 OA1 OA2 GNDM VM` / `DIR STEP CLK PDN NC MS2 MS1 EN`. An A4988 or DRV8825 has a different pin order: use `box` for it, with its own pins.
-   - `nema17_pg` — `A1 A2` (coil A), `B1 B2` (coil B).
-   - `psu` — `V+ V-`. `resistor` — `1 2`, optional `"bands"`.
-   - `box` — any other part: `"size":[w,h,d]`, `"pins":{"VCC":[x,y,z],…}`, `"label"`, `"text"`. It stays a closed box. Never invent internals for it.
-4. **Wires.** `{"a":"pi.11","b":"drv.STEP","color":"#2a9d3a","sig":"step","loop":"logic"}`. Write a→b in the direction of conventional current. `loop` is `logic` (mA, commands) or `motor` (A, power). `sig` sets what flows:
-   `vio`, `glogic`, `step`, `dir`, `pull` (EN pull-up path, add `"level":"en"` on the GPIO wire), `vm`, `gmotor`, `iA`, `iB` (stepper sim), or `dc:0.02` (fixed 20 mA when powered: LEDs, sensors, other circuits).
-5. Build, then send the file. Chat reply below 150 words: the parts found, the two loops, one safety line (no motor connect/disconnect while VM has power), the file.
-
-Physics the page must keep (do not change in the scene): logic loop and motor loop are separate; STEP/DIR/EN are voltage signals; EN is active LOW with a pull-up; coil currents follow sine/cosine microsteps; the 2-pole rotor is a marked simplification; electrons move opposite to conventional current.
-
-To add a new library part (only when the user will use it again): add one builder to `LIB` in `viewer.html` with `shell`, `board` and `inner` tags, take internals from the datasheet, and write the source on the page. Run `node circuit3d/sim.test.js` after any change to `sim.js`.
+This skill does not build 3D circuits from photos. If the user sends a photo of electronics parts and asks how they work together, use the `hardware-circuit-visualizer` skill. If it is not installed, tell the user: https://github.com/pruthvirajshinde2468-source/claude-hardware-circuit-visualizer-skill
 
 ## Appendix: ste_template.html
 

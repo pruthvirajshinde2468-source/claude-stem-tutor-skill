@@ -1,11 +1,12 @@
 # Changelog
 
-Version = MAJOR.MINOR.PATCH. MAJOR: a new mode. MINOR: new feature or examples. PATCH: fixes.
+Version = MAJOR.MINOR.PATCH. MAJOR: a mode added or removed. MINOR: new feature or examples. PATCH: fixes.
 The version is in `SKILL.md` (`metadata.version` and the title), in the first line of `portable/STEM-TUTOR-PROMPT.md`, and in the zip name.
 
 | Version | Date | What changed |
 |---|---|---|
-| **v2.1.3** | 2026-11-15 | Phone view: on a portrait screen the 3D bench now fills the view, runs top to bottom, and its labels do not overlap. Launch brief (LAUNCH.md) added. |
+| **v3.0.0** | 2026-11-22 | **Breaking:** the photo → 3D circuit lab moved out into its own skill, [hardware-circuit-visualizer](https://github.com/pruthvirajshinde2468-source/claude-hardware-circuit-visualizer-skill). STEM Tutor now only teaches topics. The old circuit demo links redirect to the new repo. |
+| v2.1.3 | 2026-11-15 | Phone view: on a portrait screen the 3D bench now fills the view, runs top to bottom, and its labels do not overlap. Launch brief (LAUNCH.md) added. |
 | v2.1.2 | 2026-11-14 | Security fix: text from a shared 3D-lab link is shown as plain text, so a bad link cannot run code. |
 | v2.1.1 | 2026-11-14 | README picture is now the 3D stepper circuit. Skill files are the same as v2.1.0. |
 | v2.1.0 | 2026-11-14 | Works with any AI: `portable/STEM-TUTOR-PROMPT.md` for ChatGPT, Gemini and others. Hosted 3D circuit lab with a paste box (`circuit-lab.html`). |
